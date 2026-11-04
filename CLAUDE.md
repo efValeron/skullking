@@ -19,7 +19,9 @@ React + TypeScript + Vite, PWA (офлайн, localStorage), портретны�
 
 Целевая платформа: сайт в браузере телефона (390×844), десктоп и адаптив не нужны.
 
-Код: `src/game/model.ts` (модель и правила, чистые функции), `src/App.tsx` (состояние и навигация), `src/screens/*` (экраны: пропсы на вход, колбэки на выход), `src/i18n.ts` (строки). Проверки: `npm test`, `npx tsc --noEmit`, e2e на клоне `node tools/explore/clone-e2e.mjs` и голос `node tools/explore/voice-e2e.mjs` (нужен `npm run dev`), тесты `voice-core`: `cd voice-core && npm test`. Визуальное сравнение с оригиналом: `node tools/explore/clone-shots.mjs [--only=NN]` и `node tools/explore/compare.mjs [NN]` → `reference/compare/`. Стили: глобальные в `src/app.css` (подключается раньше экранов), экранные в `src/screens/*.css`. Исследование оригинала: `tools/explore/` (`sh restart.sh`, `sh d.sh '{"op":"texts"}'`).
+Код: `src/game/model.ts` (модель и правила, чистые функции), `src/App.tsx` (состояние и навигация), `src/screens/*` (экраны: пропсы на вход, колбэки на выход), `src/i18n.ts` (строки). Проверки: `npm test`, `npx tsc --noEmit`, e2e на клоне `node tools/explore/clone-e2e.mjs` и голос `node tools/explore/voice-e2e.mjs` (нужен `npm run dev`), тесты `voice-core`: `cd voice-core && npm test`. Визуальное сравнение с оригиналом: `node tools/explore/clone-shots.mjs [--only=NN]` и `node tools/explore/compare.mjs [NN]` → `reference/compare/`. Стили: глобальные в `src/app.css` (подключается раньше экранов), экранные в `src/screens/*.css`.
+
+Деплой: репозиторий https://github.com/efValeron/skullking, сайт https://efvaleron.github.io/skullking/. Пуш в `main` → workflow `.github/workflows/deploy.yml` (тесты, сборка, GitHub Pages). PWA через `vite-plugin-pwa`, проверка офлайна: `npx vite preview --port 4173` и `node tools/explore/pwa-check.mjs`. Иконки: `public/icons/icon.svg` → `node tools/explore/make-icons.mjs`. Папка `reference/` в git не входит (сборка и скриншоты оригинала): восстанавливается шагами этапа 1. Исследование оригинала: `tools/explore/` (`sh restart.sh`, `sh d.sh '{"op":"texts"}'`).
 
 ## План
 ### Этап 1. Исследование оригинала (код приложения ещё не писать)
