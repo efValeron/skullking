@@ -4,6 +4,8 @@ import {
   canFinish,
   cardsFor,
   createGame,
+  dealerAfterRemove,
+  dealerOf,
   defaultLimit,
   effectiveMaxCards,
   isGameFinished,
@@ -112,6 +114,36 @@ describe('rounds and options', () => {
     expect(lastRound(g).players).toEqual([p(0, 0), p(0, 0, 0, true)]);
     g = nextRound(updateLast(g, (r) => ({ ...r, finished: true })));
     expect(lastRound(g).players[1]!.away).toBe(true);
+  });
+});
+
+describe('dealer', () => {
+  const opts = { totalRounds: 10, startRound: 1, maxCards: null };
+  const rounds = (g: Game, k: number) => {
+    for (let i = 0; i < k; i++) g = nextRound(updateLast(g, (r) => ({ ...r, finished: true })));
+    return g;
+  };
+  it('defaults to the first player (also for old saves without the field)', () => {
+    const g = createGame(['a', 'b', 'c'], opts);
+    expect(dealerOf(g)).toBe(0);
+    const { firstDealer: _, ...old } = g;
+    expect(dealerOf(old)).toBe(0);
+  });
+  it('passes to the next player each round and wraps around', () => {
+    const g = rounds(createGame(['a', 'b', 'c'], opts, new Date(), 1), 3);
+    expect([0, 1, 2, 3].map((k) => dealerOf(g, k))).toEqual([1, 2, 0, 1]);
+  });
+  it('skips players who are out', () => {
+    let g = rounds(createGame(['a', 'b', 'c'], opts, new Date(), 0), 1); // round 2: dealer b
+    g = applyPlayers(g, ['a', 'b', 'c'], [true, false, true]); // b leaves in round 2
+    expect(dealerOf(g)).toBe(2);
+    g = rounds(g, 1); // round 3: after c comes a
+    expect(dealerOf(g)).toBe(0);
+  });
+  it('choice follows its player when rows are removed', () => {
+    expect(dealerAfterRemove(2, 0)).toBe(1);
+    expect(dealerAfterRemove(2, 2)).toBe(0);
+    expect(dealerAfterRemove(1, 3)).toBe(1);
   });
 });
 

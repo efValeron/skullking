@@ -9,7 +9,17 @@ const ICONS = {
   close: 'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z',
   star: 'M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z',
   check: 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',
+  // «style»: a fan of cards, marks the dealer
+  cards:
+    'm2.53 19.65 1.34.56v-9.03l-2.43 5.86c-.41 1.02.08 2.19 1.09 2.61zm19.5-3.7L17.07 3.98c-.31-.75-1.04-1.21-1.81-1.23-.26 0-.53.04-.79.15L7.1 5.95c-.75.31-1.21 1.03-1.23 1.8-.01.27.04.54.15.8l4.96 11.97c.31.76 1.05 1.22 1.83 1.23.26 0 .52-.05.77-.15l7.36-3.05c1.02-.42 1.51-1.59 1.09-2.6zM7.88 8.75c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-2 11c0 1.1.9 2 2 2h1.45l-3.45-8.34v6.34z',
 };
+
+/** Dealer mark next to a player's name. */
+export const DealerMark = () => (
+  <span className="dealer-mark" role="img" aria-label={t.dealer} title={t.dealer}>
+    <Icon name="cards" size={20} />
+  </span>
+);
 
 export const Icon = ({ name, size = 24 }: { name: keyof typeof ICONS; size?: number }) => (
   <svg className="icon" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">

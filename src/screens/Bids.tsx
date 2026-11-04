@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { mergeBids, parseBids, type BidsDraft } from '../../voice-core/parser';
-import { lastRound, type Game } from '../game/model';
+import { dealerOf, lastRound, type Game } from '../game/model';
 import { t } from '../i18n';
-import { AppBar, Button, Card, Stepper } from '../ui';
+import { AppBar, Button, Card, DealerMark, Stepper } from '../ui';
 import { activeNames, bidsChips, bidsFromDraft, failText, voiceCommand } from '../voice/drafts';
 import { useSpeech, VoiceBox } from '../voice/Voice';
 import './forms.css';
@@ -16,6 +16,7 @@ export function BidsScreen(props: BidsProps) {
   const before = props.mode === 'before';
   const r = lastRound(game);
   const names = game.playerNames;
+  const dealer = dealerOf(game);
   const [bids, setBids] = useState(() => r.players.map((p) => p.bid));
 
   // Voice: phrases build a draft; «Принять» copies it into the steppers (still not the game).
@@ -50,7 +51,10 @@ export function BidsScreen(props: BidsProps) {
     const name = names[i]!;
     return (
       <div className="bid-block" key={i}>
-        <h2 className="player-name">{name}</h2>
+        <h2 className="player-name">
+          {name}
+          {i === dealer && <DealerMark />}
+        </h2>
         <Stepper
           label={name}
           value={bids[i]!}

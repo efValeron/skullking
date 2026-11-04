@@ -38,6 +38,7 @@ export function App() {
   const [names, setNames] = useState<string[]>(loadNames);
   const [cur, setCur] = useState<number | null>(null);
   const [draft, setDraft] = useState<string[]>(['', '']);
+  const [draftDealer, setDraftDealer] = useState(0);
   const [stack, setStack] = useState<Route[]>([{ to: 'start' }]);
   const [drawer, setDrawer] = useState(false);
 
@@ -72,11 +73,12 @@ export function App() {
 
   const newGame = () => {
     setDraft(['', '']);
+    setDraftDealer(0);
     setCur(null);
     reset({ to: 'start' }, { to: 'players' });
   };
   const startGame = (o: Options) => {
-    const g = createGame(draft.map((n) => n.trim()), o);
+    const g = createGame(draft.map((n) => n.trim()), o, new Date(), draftDealer);
     setNames((h) => mergeNames(h, g.playerNames));
     setCur(games.length);
     setGames((gs) => [...gs, g]);
@@ -94,6 +96,7 @@ export function App() {
             games={games}
             onNewGame={() => {
               setDraft(['', '']);
+              setDraftDealer(0);
               push({ to: 'players' });
             }}
             onContinue={(i) => {
@@ -127,10 +130,12 @@ export function App() {
           <PlayersScreen
             mode="create"
             names={draft}
+            dealer={draftDealer}
             history={names}
             onBack={back}
-            onSubmit={(n) => {
+            onSubmit={(n, _inGame, d) => {
               setDraft(n);
+              setDraftDealer(d);
               push({ to: 'options' });
             }}
           />

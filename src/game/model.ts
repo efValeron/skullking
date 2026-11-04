@@ -23,6 +23,8 @@ export interface Game {
   startRound: number;
   maxCards: number | null;
   startDate: string;
+  /** Who deals the first round (player index). Not in the original; missing in old saves = 0. */
+  firstDealer?: number;
 }
 export interface Options {
   totalRounds: number;
@@ -64,10 +66,34 @@ export function makeRound(g: Pick<Game, 'playerNames' | 'startRound' | 'maxCards
 /** Local time without zone, like the original: 2026-11-04T23:31:00.658 */
 export const localIso = (d: Date): string => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 23);
 
-export function createGame(playerNames: string[], o: Options, now = new Date()): Game {
-  const g: Game = { playerNames, rounds: [], ...o, startDate: localIso(now) };
+export function createGame(playerNames: string[], o: Options, now = new Date(), firstDealer = 0): Game {
+  const g: Game = { playerNames, rounds: [], ...o, startDate: localIso(now), firstDealer };
   return { ...g, rounds: [makeRound(g)] };
 }
+
+/**
+ * Dealer of a round (default: the last one). Starts at firstDealer and passes to the next player
+ * each round, skipping players who are out in that round.
+ */
+export function dealerOf(g: Game, roundIndex = g.rounds.length - 1): number {
+  const n = g.playerNames.length;
+  let d = Math.min(Math.max(g.firstDealer ?? 0, 0), Math.max(n - 1, 0));
+  for (let k = 1; k <= roundIndex; k++) {
+    const away = g.rounds[k]?.players.map((p) => p.away) ?? [];
+    for (let s = 1; s <= n; s++) {
+      const c = (d + s) % n;
+      if (!away[c]) {
+        d = c;
+        break;
+      }
+    }
+  }
+  return d;
+}
+
+/** Dealer choice after removing row `removed` on the players screen: it follows its player, or falls back to the first. */
+export const dealerAfterRemove = (dealer: number, removed: number): number =>
+  removed < dealer ? dealer - 1 : removed === dealer ? 0 : dealer;
 
 export const updateLast = (g: Game, fn: (r: Round) => Round): Game => ({ ...g, rounds: [...g.rounds.slice(0, -1), fn(lastRound(g))] });
 

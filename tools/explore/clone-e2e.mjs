@@ -17,6 +17,7 @@ const group = (name) => page.getByRole('group', { name, exact: true });
 const plus = async (g, n = 1) => { for (let i = 0; i < n; i++) await group(g).getByRole('button', { name: '+' }).click(); };
 const minus = async (g, n = 1) => { for (let i = 0; i < n; i++) await group(g).getByRole('button', { name: '-' }).click(); };
 const menu = () => btn('Открыть меню навигации').click();
+const dealer = () => page.locator('.player-name:has(.dealer-mark):visible').innerText();
 const totals = (round) => page.locator(`td[data-round="${round}"] .total`).allInnerTexts();
 async function expectTotals(round, want) {
   assert.deepEqual((await totals(round)).map(Number), want, `totals of round ${round}`);
@@ -27,11 +28,13 @@ async function expectTotals(round, want) {
 await btn('Начать новую игру').click();
 await btn('Добавить игрока').click();
 for (const [i, n] of ['Аня', 'Дима', 'Оля'].entries()) await page.getByLabel(`Введите имя ${i + 1}`).fill(n);
+await btn('Раздаёт: 3').click(); // Оля deals first
 await btn('Новая игра').click();
 await minus('Раунды', 6);
 await btn('Начать игру').click();
 
 // Round 1
+assert.equal(await dealer(), 'Оля', 'round 1 dealer = the one picked');
 await plus('Аня');
 await btn('Начать раунд').click();
 await plus('Аня: Взято');
@@ -46,6 +49,7 @@ await expectTotals(1, [40, 20, 10]);
 
 // Round 2: Аня misses with a bonus, Оля makes 0 with a bonus
 await btn('Следующий раунд').click();
+assert.equal(await dealer(), 'Аня', 'round 2 dealer (wraps around)');
 await plus('Аня', 2);
 await plus('Дима');
 await btn('Начать раунд').click();
@@ -58,6 +62,7 @@ await expectTotals(2, [30, 40, 60]);
 
 // Round 3: reset once via the menu, then Kraken (tricks = cards − 1)
 await btn('Следующий раунд').click();
+assert.equal(await dealer(), 'Дима', 'round 3 dealer');
 await plus('Дима', 2);
 await btn('Начать раунд').click();
 await menu();
@@ -83,6 +88,8 @@ await menu();
 await btn('Редактировать игроков').click();
 await page.getByLabel('В игре: 3').uncheck();
 await btn('Сохранить').click();
+assert.equal(await dealer(), 'Аня', 'round 4: Оля is out, the mark skips her');
+console.log('ok  dealer skips a player who left');
 await plus('Аня', 2);
 await plus('Дима', 2);
 await btn('Начать раунд').click();

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { namesValid, suggestNames } from '../game/model';
+import { dealerAfterRemove, namesValid, suggestNames } from '../game/model';
 import { t } from '../i18n';
-import { AppBar, Button, Checkbox } from '../ui';
+import { AppBar, Button, Checkbox, Icon } from '../ui';
 import { failText, fillNames, namesFromVoice } from '../voice/drafts';
 import { useSpeech, VoiceBox } from '../voice/Voice';
 import './forms.css';
@@ -12,20 +12,23 @@ export interface PlayersProps {
   names: string[];
   /** Edit only: «в игре» per player for the current round. */
   inGame?: boolean[];
+  /** Create only: who deals first (row index, default 0). */
+  dealer?: number;
   /** Name history for autocomplete (suggestNames). */
   history: string[];
   /** «←» in create, «✕» in edit. */
   onBack: () => void;
-  /** Create: names only (button «Новая игра»). Edit: names + in-game flags (button «Сохранить»). */
-  onSubmit: (names: string[], inGame: boolean[]) => void;
+  /** Create: names + first dealer (button «Новая игра»). Edit: names + in-game flags (button «Сохранить»). */
+  onSubmit: (names: string[], inGame: boolean[], dealer: number) => void;
 }
 
 const setAt = <T,>(arr: T[], i: number, v: T): T[] => arr.map((x, j) => (j === i ? v : x));
 
-export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame, history, onBack, onSubmit }: PlayersProps) {
+export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame, dealer: initialDealer = 0, history, onBack, onSubmit }: PlayersProps) {
   const edit = mode === 'edit';
   const [names, setNames] = useState(initialNames);
   const [inGame, setInGame] = useState(initialInGame ?? []);
+  const [dealer, setDealer] = useState(initialDealer);
   /** Row whose autocomplete list is open. */
   const [open, setOpen] = useState<number | null>(null);
 
@@ -50,6 +53,7 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
       <AppBar title={edit ? t.menuEditPlayers : t.newGame} icon={edit ? 'close' : 'back'} onIcon={onBack} />
       <main className={edit ? 'screen players-edit' : 'screen'}>
         <h2 className="section-title">{t.players}</h2>
+        {!edit && <p className="dealer-hint">{t.dealerHint}</p>}
         {names.map((name, i) => {
           const hints = open === i ? suggestNames(history, name) : [];
           return (
@@ -70,9 +74,26 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
               {edit ? (
                 <Checkbox hideLabel label={`${t.inGame}: ${i + 1}`} checked={inGame[i] ?? true} onChange={(v) => setInGame(setAt(inGame, i, v))} />
               ) : (
-                <button className="circle circle-sm" aria-label={`${t.remove} ${i + 1}`} onClick={() => setNames(names.filter((_, j) => j !== i))}>
-                  -
-                </button>
+                <>
+                  <button
+                    className={i === dealer ? 'circle circle-sm dealer-pick on' : 'circle circle-sm dealer-pick'}
+                    aria-label={`${t.dealer}: ${i + 1}`}
+                    aria-pressed={i === dealer}
+                    onClick={() => setDealer(i)}
+                  >
+                    <Icon name="cards" size={18} />
+                  </button>
+                  <button
+                    className="circle circle-sm"
+                    aria-label={`${t.remove} ${i + 1}`}
+                    onClick={() => {
+                      setNames(names.filter((_, j) => j !== i));
+                      setDealer(dealerAfterRemove(dealer, i));
+                    }}
+                  >
+                    -
+                  </button>
+                </>
               )}
               {hints.length > 0 && (
                 <ul className="hints list-reset">
@@ -98,7 +119,7 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
         <button className="btn add-bar" aria-label={t.add} disabled={edit} onClick={() => setNames([...names, ''])}>
           +
         </button>
-        <Button disabled={!namesValid(names)} onClick={() => onSubmit(names, edit ? names.map((_, i) => inGame[i] ?? true) : names.map(() => true))}>
+        <Button disabled={!namesValid(names)} onClick={() => onSubmit(names, edit ? names.map((_, i) => inGame[i] ?? true) : names.map(() => true), dealer)}>
           {edit ? t.savePlayers : t.newGame}
         </Button>
         {!edit && (

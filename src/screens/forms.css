@@ -18,12 +18,12 @@
 .player-row { position: relative; display: flex; align-items: center; }
 /* 8px between fields and before «+» (the original had the fields touching). */
 .player-row + .player-row, .player-row + .add-bar { margin-top: 8px; }
-.name-field { width: 320px; height: 56px; padding: 0 12px; border: 1px solid var(--field); border-radius: 4px; background: none; font-size: 16px; letter-spacing: 0.5px; caret-color: var(--primary); }
+.name-field { flex: 1; min-width: 0; height: 56px; padding: 0 12px; border: 1px solid var(--field); border-radius: 4px; background: none; font-size: 16px; letter-spacing: 0.5px; caret-color: var(--primary); }
 .name-field::placeholder { color: var(--placeholder); opacity: 1; }
 /* Focus = 2px primary edge drawn by the outline over the border (inputs always show it). */
 .name-field:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
-.player-row .circle-sm { margin-left: 16px; }
-.players-edit .name-field { width: 328px; }
+.player-row .circle-sm { margin-left: 8px; }
+.player-row .name-field + .circle-sm { margin-left: 12px; }
 .players-edit .checkbox { margin-left: 16px; }
 .hints { position: absolute; top: 56px; left: 0; z-index: 2; width: 380px; background: var(--paper); box-shadow: var(--hint-shadow); }
 .hints button { display: block; width: 100%; height: 52px; padding: 0 16px; border: 0; background: none; text-align: left; }
@@ -74,3 +74,8 @@
 .bonus-list button { display: flex; align-items: center; justify-content: space-between; width: 100%; height: 48px; padding: 0 24px 0 16px; border: 0; background: none; text-align: left; }
 .bonus-label { font-size: 16px; line-height: 24px; letter-spacing: 0; }
 .bonus-pts { letter-spacing: 0.1px; }
+
+/* Dealer: pick on the players screen, mark next to the name on bids and round. Not in the original. */
+.dealer-hint { margin: -4px 0 8px; color: var(--placeholder); }
+.circle.dealer-pick:not(.on) { background: transparent; color: var(--field); border-color: var(--field); }
+.dealer-mark { display: inline-flex; vertical-align: -3px; margin-left: 8px; color: var(--primary); }

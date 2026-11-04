@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { mergeResults, parseResults, type ResultsDraft } from '../../voice-core/parser';
-import { BONUS_PRESETS, canFinish, lastRound, type Game, type PlayerRound, type Round } from '../game/model';
+import { BONUS_PRESETS, canFinish, dealerOf, lastRound, type Game, type PlayerRound, type Round } from '../game/model';
 import { t } from '../i18n';
-import { AppBar, Button, Checkbox, Icon, Sheet, Stepper } from '../ui';
+import { AppBar, Button, Checkbox, DealerMark, Icon, Sheet, Stepper } from '../ui';
 import { activeNames, failText, resultChips, resultIssues, roundFromDraft, voiceCommand } from '../voice/drafts';
 import { useSpeech, VoiceBox } from '../voice/Voice';
 import './forms.css';
@@ -19,6 +19,7 @@ export interface RoundProps {
 export function RoundScreen({ game, onMenu, onChange: save, onFinish }: RoundProps) {
   const r = lastRound(game);
   const names = game.playerNames;
+  const dealer = dealerOf(game);
   /** Player whose bonus-preset sheet is open. */
   const [sheet, setSheet] = useState<number | null>(null);
 
@@ -67,7 +68,10 @@ export function RoundScreen({ game, onMenu, onChange: save, onFinish }: RoundPro
           const name = game.playerNames[i]!;
           return (
             <div className="round-block" key={i}>
-              <h2 className="player-name">{name}</h2>
+              <h2 className="player-name">
+                {name}
+                {i === dealer && <DealerMark />}
+              </h2>
               <div className="round-row round-labels">
                 <span>{t.bids}</span> <span>{t.tricks}</span> <span>{t.bonus}</span>
               </div>
