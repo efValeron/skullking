@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { parseName } from '../../voice-core/parser';
 import { namesValid, suggestNames } from '../game/model';
 import { t } from '../i18n';
 import { AppBar, Button, Checkbox } from '../ui';
-import { failText } from '../voice/drafts';
+import { failText, fillNames, namesFromVoice } from '../voice/drafts';
 import { useSpeech, VoiceBox } from '../voice/Voice';
 import './forms.css';
 
@@ -30,21 +29,20 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
   /** Row whose autocomplete list is open. */
   const [open, setOpen] = useState<number | null>(null);
 
-  // Voice (create only): one phrase = one name into the first empty field (or a new row).
-  // The form itself is the draft: nothing reaches the game before «Новая игра».
+  // Voice (create only): one phrase can hold several names («Аня, Дима и Оля»); they fill the empty
+  // fields in order, extra ones add rows. The form itself is the draft: nothing reaches the game before «Новая игра».
   const target = names.findIndex((n) => !n.trim());
   const [problem, setProblem] = useState<string | null>(null);
   const [notes, setNotes] = useState<string[]>([]);
   const [undo, setUndo] = useState<string[] | null>(null);
   const speech = useSpeech((alts) => {
-    const res = parseName(alts, names.filter((n) => n.trim()));
+    const res = namesFromVoice(alts, names.filter((n) => n.trim()));
     if (!res.ok) return setProblem(failText(res));
     setProblem(null);
     setNotes(res.warnings);
-    const name = res.draft.name;
-    if (!name) return; // «готово»
+    if (!res.names.length) return; // just «готово»
     setUndo(names);
-    setNames(target >= 0 ? setAt(names, target, name) : [...names, name]);
+    setNames(fillNames(names, res.names));
   });
 
   return (

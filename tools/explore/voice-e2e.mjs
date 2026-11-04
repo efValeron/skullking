@@ -40,8 +40,19 @@ const text = (s) => page.getByText(s, { exact: false });
 const value = (group) => page.getByRole('group', { name: group, exact: true }).locator('.stepper-value').innerText();
 const ok = (m) => console.log('ok ', m);
 
-// Names: one phrase = one name; noise and duplicates rejected; a third name adds a row.
+// Names: several in one phrase fill the fields and add rows; table talk is rejected; undo restores.
 await btn('Начать новую игру').click();
+const fields = () => page.locator('input.name-field').evaluateAll((els) => els.map((e) => e.value));
+await say('Аня, Дима и Оля Иван');
+assert.deepEqual(await fields(), ['Аня', 'Дима', 'Оля', 'Иван']);
+await say('Катя, ходи уже');
+assert.equal(await text('Не понял: «Катя, ходи уже»').count(), 1);
+assert.deepEqual(await fields(), ['Аня', 'Дима', 'Оля', 'Иван'], 'noise changed nothing');
+await btn('Вернуть как было').click();
+assert.deepEqual(await fields(), ['', '']);
+ok('several names in one phrase, noise rejected, undo');
+
+// Names one by one still work; noise and duplicates rejected; a third name adds a row.
 await say('Аня');
 await say('Дима');
 await say('Аня два');

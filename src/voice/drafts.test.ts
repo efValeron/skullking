@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseBids, parseResults, mergeResults, type ResultsDraft } from '../../voice-core/parser';
 import { createGame, lastRound, updateLast, type Round } from '../game/model';
-import { bidsChips, bidsFromDraft, failText, resultChips, resultIssues, roundFromDraft, voiceCommand } from './drafts';
+import { bidsChips, bidsFromDraft, failText, fillNames, namesFromVoice, resultChips, resultIssues, roundFromDraft, voiceCommand } from './drafts';
 import { createWebSpeechEngine } from './engine';
 
 const names = ['Аня', 'Дима', 'Оля'];
@@ -19,6 +19,32 @@ describe('voice commands', () => {
     expect(voiceCommand(['Принять!'])).toBe('accept');
     expect(voiceCommand(['что-то', 'отмена'])).toBe('cancel');
     expect(voiceCommand(['Аня два'])).toBe(null);
+  });
+});
+
+describe('names: several in one phrase', () => {
+  const names = (alts: string[], existing: string[] = []) => {
+    const r = namesFromVoice(alts, existing);
+    return r.ok ? [r.names, r.done] : r.reason;
+  };
+  it('splits by spaces, commas and «и»', () => expect(names(['Аня, Дима и Оля Иван'])).toEqual([['Аня', 'Дима', 'Оля', 'Иван'], false]));
+  it('one name still works; hyphenated name is one', () => expect(names(['анна-мария'])).toEqual([['Анна-Мария'], false]));
+  it('trailing «готово» ends input', () => expect(names(['Аня Дима готово'])).toEqual([['Аня', 'Дима'], true]));
+  it('noise rejects the whole phrase', () => {
+    expect(names(['Аня два'])).toBe('bad_name');
+    expect(names(['ну давай уже'])).toBe('bad_name');
+    expect(names(['Аня, ходи уже'])).toBe('bad_name');
+    expect(names(['Иван твой ход'])).toBe('bad_name');
+    expect(names(['подожди, Оля'])).toBe('bad_name');
+  });
+  it('duplicates: inside the phrase and against filled fields', () => {
+    expect(names(['Аня Аня'])).toBe('duplicate');
+    expect(names(['Дима Аня'], ['Аня'])).toBe('duplicate');
+  });
+  it('first alternative that passes wins', () => expect(names(['Аня 2 Дима', 'Аня Дима'])).toEqual([['Аня', 'Дима'], false]));
+  it('fills empty fields, then appends rows', () => {
+    expect(fillNames(['', 'Дима', ''], ['Аня', 'Оля', 'Иван'])).toEqual(['Аня', 'Дима', 'Оля', 'Иван']);
+    expect(fillNames([], ['Аня'])).toEqual(['Аня']);
   });
 });
 
