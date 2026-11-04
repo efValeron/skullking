@@ -1,11 +1,9 @@
 /* Leaderboard, score editing and the cell sheet. Sizes measured on the original (docs/original-ux.md §2). */
-:root { --line: rgba(0, 0, 0, 0.45); }
-
 /* Table runs edge to edge from y=51, under the torn edge of the app bar. */
-.screen.scores-screen { padding: 0 0 10px; margin-top: -5px; }
-.scores-screen > .card { align-self: center; display: flex; flex-direction: column; align-items: center; gap: 15px; margin: 10px 10px 20px; padding: 20px; }
+.screen.scores-screen { padding: 0 0 12px; margin-top: -4px; }
+.scores-screen > .card { align-self: center; display: flex; flex-direction: column; align-items: center; gap: 16px; margin: 12px var(--pad) 20px; padding: 20px; }
 .scores-screen > .card > :first-child { margin-bottom: 1px; } /* the hint is 41px tall in the original */
-.scores-screen > .btn { width: auto; margin: 10px 10px 0; }
+.scores-screen > .btn { width: auto; margin: 12px var(--pad) 0; }
 
 /* Lines sit inside the cells: top line in the header, bottom line in every row, left line on player columns. */
 .scores { width: 100%; border-spacing: 0; table-layout: fixed; text-align: center; }
@@ -19,20 +17,21 @@
 .scores .sub { display: grid; grid-template-columns: 1fr 1fr 2fr; container-type: inline-size; margin-left: -1px; } /* split the whole column, line included */
 .scores .sub > span { padding: 0 0.35em; font-size: min(14px, 22.3cqw); height: min(27px, 43cqw); line-height: min(25px, 40cqw); }
 .scores .sub > span:not(:last-child) { border-right: 1px solid var(--line); }
-.scores .total { display: block; height: 30px; line-height: 27px; border-top: 1px solid var(--line); background: rgba(0, 0, 0, 0.12); }
+.scores .total { display: block; height: 30px; line-height: 27px; border-top: 1px solid var(--line); background: var(--total-strip); }
 .scores .frac { width: fit-content; margin: 1px auto 0; padding: 0 1px; border-top: 1px solid var(--line); font-size: 11px; line-height: 16px; }
 
-.scores tr.current { background: rgba(38, 123, 116, 0.333); }
-.scores tr.invalid { background: #ff5252; }
-.scores td.changed { background: #ffd740; }
+.scores tr.current { background: var(--current-row); }
+.scores tr.invalid { background: var(--error); }
+.scores td.changed { background: var(--changed); }
 .scores td > button { display: block; width: 100%; padding: 0; border: 0; background: none; }
-.scores-screen .error { padding-bottom: 1px; color: #ff5252; }
+.scores td > button:focus-visible { outline-offset: -2px; } /* keep the ring inside the cell */
+.scores-screen .error { padding-bottom: 1px; color: var(--error-text); }
 
 /* Cell sheet: everything centred, buttons full width. */
-.cell-sheet { display: flex; flex-direction: column; align-items: center; padding: 9px 10px 15px; }
+.cell-sheet { display: flex; flex-direction: column; align-items: center; padding: 8px var(--pad) 16px; }
 .cell-sheet h2 { font-size: 22px; line-height: 28px; }
-.cell-sheet .checkbox { gap: 8px; height: 48px; margin: 3px 0 11px; padding-left: 7px; }
+.cell-sheet .checkbox { gap: 8px; height: 48px; margin: 4px 0 12px; padding-left: 8px; }
 .cell-sheet > h2 + div { margin-top: 16px; }
 .cell-sheet > div > div:first-child { margin-bottom: 1px; }
 .cell-sheet > .btn { margin-top: 40px; }
-.cell-sheet > .btn + .btn { margin-top: 5px; }
+.cell-sheet > .btn + .btn { margin-top: 4px; }

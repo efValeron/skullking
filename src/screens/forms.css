@@ -1,73 +1,74 @@
 /* Start, Players, Options, Bids, Round. Positions measured on the original at 390×844 (docs/original-ux.md §2). */
-.section-title { margin: 4px 0 6px; font-size: 22px; line-height: 28px; letter-spacing: 0; }
+.section-title { margin: 4px 0 8px; font-size: 22px; line-height: 28px; letter-spacing: 0; }
 .list-reset { margin: 0; padding: 0; list-style: none; }
 .circle.circle-sm { width: 32px; height: 32px; }
 
 /* Start */
-.start-empty > .btn { margin-top: 5px; }
-.game { display: flex; align-items: flex-end; padding-bottom: 7.5px; border-bottom: 1px solid var(--divider); margin-bottom: 7.5px; }
+.start-empty > .btn { margin-top: 4px; }
+.game { display: flex; align-items: flex-end; padding-bottom: 8px; border-bottom: 1px solid var(--divider); margin-bottom: 8px; }
 .game-info { flex: 1; min-width: 0; }
-.game-status { font-size: 16px; line-height: 24px; letter-spacing: 0.5px; }
+.game-status { font-size: 16px; line-height: 24px; letter-spacing: 0; }
 .game-date { line-height: 21px; }
 .game-names { line-height: 20.5px; }
 .game > .btn { width: 130px; flex: none; }
 .game + .btn { margin-top: 20px; }
 
 /* Players */
-.screen.players-edit { padding-top: 15px; }
+.screen.players-edit { padding-top: 16px; }
 .player-row { position: relative; display: flex; align-items: center; }
-.name-field { width: 320px; height: 56px; padding: 0 11px 2px; border: 1px solid var(--field); border-radius: 4px; outline: 0; background: none; font-size: 16px; letter-spacing: 0.5px; caret-color: var(--primary); }
-.name-field::placeholder { color: #5f5747; opacity: 1; }
-.name-field:focus { border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); }
-.player-row .circle-sm { margin-left: 14px; }
+.name-field { width: 320px; height: 56px; padding: 0 12px; border: 1px solid var(--field); border-radius: 4px; background: none; font-size: 16px; letter-spacing: 0.5px; caret-color: var(--primary); }
+.name-field::placeholder { color: var(--placeholder); opacity: 1; }
+/* Focus = 2px primary edge drawn by the outline over the border (inputs always show it). */
+.name-field:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.player-row .circle-sm { margin-left: 16px; }
 .players-edit .name-field { width: 328px; }
-.players-edit .checkbox { margin-left: 17px; }
-.hints { position: absolute; top: 56px; left: 0; z-index: 2; width: 380px; background: #f6ecd9; box-shadow: 0 3px 4px rgba(0, 0, 0, 0.2), 0 1px 8px rgba(0, 0, 0, 0.12); }
+.players-edit .checkbox { margin-left: 16px; }
+.hints { position: absolute; top: 56px; left: 0; z-index: 2; width: 380px; background: var(--paper); box-shadow: var(--hint-shadow); }
 .hints button { display: block; width: 100%; height: 52px; padding: 0 16px; border: 0; background: none; text-align: left; }
-.hints li:first-child button { background: #d8cfbe; }
+.hints li:first-child button { background: var(--hint-selected); }
 .btn.add-bar { min-height: 32px; }
 .add-bar + .btn { margin-top: 40px; }
 
 /* Options: centred column */
-.screen.options { align-items: center; padding-top: 5px; }
-.screen.options-edit { padding-top: 10px; }
+.screen.options { align-items: center; padding-top: 4px; }
+.screen.options-edit { padding-top: 8px; }
 .opt-label { font-size: 16px; line-height: 24px; letter-spacing: 0.15px; }
-.opt-label + .stepper { margin-top: 5px; }
-.stepper + .opt-label { margin-top: 15px; }
+.opt-label + .stepper { margin-top: 4px; }
+.stepper + .opt-label { margin-top: 16px; }
 .options > .card { width: 100%; margin-top: 20px; padding: 20px; text-align: left; line-height: 20.5px; }
-.options > .card p + p { margin-top: 10px; }
-.options > .btn { margin-top: 35px; }
+.options > .card p + p { margin-top: 8px; }
+.options > .btn { margin-top: 36px; }
 
 /* Bids */
 .screen.bids, .screen.round { padding-top: 4px; }
 .screen.round { padding-bottom: 40px; }
-/* Modal edit screens sit 5px lower in the original. */
-.screen.bids-edit { padding-top: 9px; }
+/* Modal edit screens sit 4px lower (5px in the original, snapped to the 4px scale). */
+.screen.bids-edit { padding-top: 8px; }
 .player-name { font-size: 22px; line-height: 28px; letter-spacing: 0; text-align: center; }
-.bid-block { padding-bottom: 17px; border-bottom: 1px solid var(--divider); margin-bottom: 7px; }
-.bid-block .stepper { margin-top: 6px; }
+.bid-block { padding-bottom: 16px; border-bottom: 1px solid var(--divider); margin-bottom: 8px; }
+.bid-block .stepper { margin-top: 8px; }
 .bid-list > .bid-block:last-child { border-bottom-color: transparent; }
-.grid2 .bid-block { padding-bottom: 18.5px; background: linear-gradient(var(--divider), var(--divider)) 15px 100% / calc(100% - 30px) 1px no-repeat; border: 0; margin-bottom: 8px; }
+.grid2 .bid-block { padding-bottom: 20px; background: linear-gradient(var(--divider), var(--divider)) 15px 100% / calc(100% - 30px) 1px no-repeat; border: 0; margin-bottom: 8px; }
 .grid2 .bid-block:last-child, .grid2 .bid-block:nth-last-child(2):nth-child(odd) { background: none; }
 .bids > .grid2 { margin-bottom: 2px; }
 .bids > .card { align-self: center; padding: 20px 36px; line-height: 21px; }
 .bids > .btn { margin-top: 20px; }
 
 /* Round */
-.round-block { padding-bottom: 8px; border-bottom: 1px solid var(--divider); margin-bottom: 7px; }
-.round-block .player-name { margin-bottom: 6px; }
+.round-block { padding-bottom: 8px; border-bottom: 1px solid var(--divider); margin-bottom: 8px; }
+.round-block .player-name { margin-bottom: 8px; }
 .round-row { display: flex; align-items: center; text-align: center; }
 .round-labels { height: 23px; align-items: flex-start; }
 .round-labels > :not(:first-child) { padding-top: 2px; }
 .round-row > :nth-child(1) { width: 53px; }
-.round-row > :nth-child(2) { width: 124px; margin-left: 5px; }
-.round-row > :nth-child(3) { width: 124px; margin-left: 13px; }
-.round-row > :nth-child(4) { width: 32px; margin-left: 11px; }
-.round .checkbox { align-self: center; gap: 7px; margin: 7px 0 0 6px; }
-.round > .btn { margin-top: 26px; }
+.round-row > :nth-child(2) { width: 124px; margin-left: 4px; }
+.round-row > :nth-child(3) { width: 124px; margin-left: 12px; }
+.round-row > :nth-child(4) { width: 32px; margin-left: 12px; }
+.round .checkbox { align-self: center; gap: 8px; margin: 8px 0 0 8px; }
+.round > .btn { margin-top: 24px; }
 
 /* Bonus presets sheet */
-.bonus-list { padding: 18px 0; }
+.bonus-list { padding: 16px 0; }
 .bonus-list button { display: flex; align-items: center; justify-content: space-between; width: 100%; height: 48px; padding: 0 24px 0 16px; border: 0; background: none; text-align: left; }
-.bonus-label { font-size: 16px; line-height: 24px; letter-spacing: 0.5px; }
+.bonus-label { font-size: 16px; line-height: 24px; letter-spacing: 0; }
 .bonus-pts { letter-spacing: 0.1px; }

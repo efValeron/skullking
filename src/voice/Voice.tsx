@@ -92,7 +92,7 @@ export function VoiceBox({ speech, chips, problem, notes = [], blocked, onAccept
           </ul>
           {onAccept && (
             <div className="voice-actions">
-              <Button small onClick={onCancel ?? (() => {})}>
+              <Button small outline onClick={onCancel ?? (() => {})}>
                 {t.cancel}
               </Button>
               <Button small disabled={blocked} onClick={onAccept}>

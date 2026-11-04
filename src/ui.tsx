@@ -31,9 +31,10 @@ export function AppBar({ title, icon, onIcon }: { title: string; icon?: 'menu' |
   );
 }
 
-export function Button({ children, onClick, disabled, small }: { children: ReactNode; onClick: () => void; disabled?: boolean; small?: boolean }) {
+export function Button(props: { children: ReactNode; onClick: () => void; disabled?: boolean; small?: boolean; /** secondary action: outline only */ outline?: boolean }) {
+  const { children, onClick, disabled, small, outline } = props;
   return (
-    <button className={small ? 'btn btn-small' : 'btn'} onClick={onClick} disabled={disabled}>
+    <button className={['btn', small && 'btn-small', outline && 'btn-outline'].filter(Boolean).join(' ')} onClick={onClick} disabled={disabled}>
       {children}
     </button>
   );

@@ -6,7 +6,7 @@
 - `voice-core/`: готовый парсер голосовых команд с тестами (чистый TypeScript).
 
 ## Цель
-Приложение-счётчик очков для карточной игры Skull King. Нужно максимально повторить оригинал по **логике, UX и визуалу**, затем добавить голосовой ввод с надёжным отсевом шума. Стек не обязан быть Flutter.
+Приложение-счётчик очков для карточной игры Skull King. Нужно точно повторить оригинал по **логике и UX**, а визуал — так, чтобы все элементы были на тех же местах и в похожем стиле (пиксель-перфект не нужен), затем добавить голосовой ввод с надёжным отсевом шума. Стек не обязан быть Flutter.
 
 ## Что известно об оригинале
 - Живая версия: https://skullkingkraken.github.io/skullkingkrakenapp/
@@ -19,7 +19,7 @@ React + TypeScript + Vite, PWA (офлайн, localStorage), портретны�
 
 Целевая платформа: сайт в браузере телефона (390×844), десктоп и адаптив не нужны.
 
-Код: `src/game/model.ts` (модель и правила, чистые функции), `src/App.tsx` (состояние и навигация), `src/screens/*` (экраны: пропсы на вход, колбэки на выход), `src/i18n.ts` (строки). Проверки: `npm test`, `npx tsc --noEmit`, e2e на клоне `node tools/explore/clone-e2e.mjs` и голос `node tools/explore/voice-e2e.mjs` (нужен `npm run dev`), тесты `voice-core`: `cd voice-core && npm test`. Визуальное сравнение с оригиналом: `node tools/explore/clone-shots.mjs [--only=NN]` и `node tools/explore/compare.mjs [NN]` → `reference/compare/`. Стили: глобальные в `src/app.css` (подключается раньше экранов), экранные в `src/screens/*.css`.
+Код: `src/game/model.ts` (модель и правила, чистые функции), `src/App.tsx` (состояние и навигация), `src/screens/*` (экраны: пропсы на вход, колбэки на выход), `src/i18n.ts` (строки). Проверки: `npm test`, `npx tsc --noEmit`, e2e на клоне `node tools/explore/clone-e2e.mjs` и голос `node tools/explore/voice-e2e.mjs` (нужен `npm run dev`), тесты `voice-core`: `cd voice-core && npm test`. Визуальное сравнение с оригиналом: `node tools/explore/clone-shots.mjs [--only=NN]` и `node tools/explore/compare.mjs [NN]` → `reference/compare/`. Стили: глобальные в `src/app.css` (подключается раньше экранов), экранные в `src/screens/*.css`. Все цвета — токены `:root` в `app.css`, отступы по сетке 4px. Проверка вкуса и доступности: `node ~/.claude/skills/hallmark/scripts/sloplint.mjs src index.html --scope app --genre playful` должен давать 0 FAIL / 0 REFLEX (штамп Hallmark в первых строках CSS не удалять).
 
 Деплой: репозиторий https://github.com/efValeron/skullking, сайт https://efvaleron.github.io/skullking/. Пуш в `main` → workflow `.github/workflows/deploy.yml` (тесты, сборка, GitHub Pages). PWA через `vite-plugin-pwa`, проверка офлайна: `npx vite preview --port 4173` и `node tools/explore/pwa-check.mjs`. Иконки: `public/icons/icon.svg` → `node tools/explore/make-icons.mjs`. Папка `reference/` в git не входит (сборка и скриншоты оригинала): восстанавливается шагами этапа 1. Исследование оригинала: `tools/explore/` (`sh restart.sh`, `sh d.sh '{"op":"texts"}'`).
 
@@ -36,7 +36,7 @@ React + TypeScript + Vite, PWA (офлайн, localStorage), портретны�
 Модель, сохранение, подсчёт очков (чистые функции с юнит-тестами на примерах из оригинала), экраны в порядке из спецификации, диалоги подтверждения, «Продолжить» и «Предыдущие игры».
 
 ### Этап 3. Визуал и UX
-Сделать вёрстку и анимации. Сравнивать скриншоты клона с `reference/screens` на том же вьюпорте (pixelmatch или odiff), итерировать, пока различия не станут мелкими. Осознанные отличия вести в `docs/deviations.md`.
+Сделать вёрстку и анимации. Сравнивать скриншоты клона с `reference/screens` на том же вьюпорте (pixelmatch или odiff) только как грубую проверку, что элементы на своих местах; проценты диффа не гонять. Осознанные отличия вести в `docs/deviations.md`.
 
 ### Этап 4. Голос
 По `docs/voice-design.md` и с `voice-core/`: кнопка «Говорить», черновик с подтверждением, окна имён, ставок и итогов, адаптер Web Speech API за интерфейсом, тесты. Новые шумовые фразы добавлять в `voice-core/cases.json`.
