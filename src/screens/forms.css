@@ -16,6 +16,8 @@
 /* Players */
 .screen.players-edit { padding-top: 16px; }
 .player-row { position: relative; display: flex; align-items: center; }
+/* 8px between fields and before «+» (the original had the fields touching). */
+.player-row + .player-row, .player-row + .add-bar { margin-top: 8px; }
 .name-field { width: 320px; height: 56px; padding: 0 12px; border: 1px solid var(--field); border-radius: 4px; background: none; font-size: 16px; letter-spacing: 0.5px; caret-color: var(--primary); }
 .name-field::placeholder { color: var(--placeholder); opacity: 1; }
 /* Focus = 2px primary edge drawn by the outline over the border (inputs always show it). */

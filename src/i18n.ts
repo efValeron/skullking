@@ -73,8 +73,6 @@ const en = {
   accept: 'Accept',
   cancel: 'Cancel',
   undo: 'Undo',
-  /** Voice input: the voice-core grammar is Russian only. */
-  voice: false,
   locale: 'en-US',
 };
 
@@ -157,7 +155,6 @@ const ru: Strings = {
   accept: 'Принять',
   cancel: 'Отмена',
   undo: 'Вернуть как было',
-  voice: true,
   locale: 'ru-RU',
 };
 
