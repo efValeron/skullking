@@ -1,0 +1,6 @@
+node_modules/
+dist/
+*.log
+
+# Original app build, its screenshots and comparison images: local reference only, not ours to publish.
+reference/

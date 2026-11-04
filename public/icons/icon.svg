@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Own app icon: the app's red round button with the bonus star, on paper. Full-bleed so it also works as maskable. -->
+  <defs>
+    <radialGradient id="paper" cx="0.5" cy="0.45" r="0.75">
+      <stop offset="0.45" stop-color="#faf1d9"/>
+      <stop offset="0.85" stop-color="#ecd7ad"/>
+      <stop offset="1" stop-color="#d9c095"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#paper)"/>
+  <circle cx="256" cy="256" r="150" fill="#c2525b" stroke="#2b2822" stroke-width="7"/>
+  <g transform="translate(256 256) scale(9) translate(-12 -12.2)">
+    <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="#eee3cb"/>
+  </g>
+</svg>

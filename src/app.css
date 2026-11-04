@@ -1,0 +1,86 @@
+/* Global look of the clone. Values from docs/original-ux.md §1 (sampled from the original). */
+:root {
+  --primary: #c2525b;
+  --on-primary: #eee3cb;
+  --text: #1e1b16;
+  --outline: #2b2822;
+  --divider: #d0c5b4;
+  --surface: #f8f2f2;
+  --dialog: #e8dbc1;
+  --scrim: rgba(0, 0, 0, 0.54);
+  --disabled-bg: rgba(30, 27, 22, 0.12);
+  --disabled-text: rgba(30, 27, 22, 0.38);
+  --field: #7f7667;
+  --pad: 10px;
+  font-family: Pangolin, 'Comic Sans MS', sans-serif;
+  font-synthesis: none;
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-size: 14px; line-height: 20px; letter-spacing: 0.25px; background: #f6ecd9; min-height: 100vh; }
+/* Paper stays put while content scrolls, like the Flutter Scaffold background. */
+body::before { content: ''; position: fixed; inset: 0; z-index: -1; background: url('./assets/paper.svg') center / 100% 100% no-repeat; }
+button, input { font: inherit; letter-spacing: inherit; color: inherit; }
+button { cursor: pointer; }
+h1, h2, h3, p { margin: 0; font-weight: 400; }
+[hidden] { display: none !important; }
+
+/* App bar: 56px paper strip with a torn edge, title 22px. */
+.appbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; height: 56px; padding: 0 16px; background: url('./assets/appbar.svg') top / 100% 58px no-repeat; }
+.appbar h1 { font-size: 22px; line-height: 28px; letter-spacing: 0; margin-left: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.appbar-plain h1 { margin-left: 0; }
+.appbar-icon { display: flex; width: 24px; height: 24px; padding: 0; border: 0; background: none; color: var(--text); }
+.icon { display: block; flex: none; }
+
+.screen { display: flex; flex-direction: column; padding: var(--pad); }
+
+/* Primary button: 370×50, radius 8, dark outline. */
+.btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 50px; padding: 0 16px; border: 1px solid var(--outline); border-radius: 8px; background: var(--primary); color: var(--on-primary); font-size: 14px; letter-spacing: 0.1px; }
+.btn:disabled { background: var(--disabled-bg); color: var(--disabled-text); cursor: default; }
+.btn-small { width: auto; min-height: 32px; padding: 0 24px; }
+.btn:not(:disabled):active, .circle:not(:disabled):active { filter: brightness(0.92); }
+
+/* Round stepper buttons 45px; value box 34px. */
+.stepper { display: flex; align-items: center; justify-content: center; }
+.stepper-value { width: 34px; text-align: center; }
+.circle { display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; padding: 0; border: 1px solid var(--outline); border-radius: 50%; background: var(--primary); color: var(--on-primary); font-size: 14px; letter-spacing: 0.1px; }
+.circle:disabled { background: var(--disabled-bg); color: var(--disabled-text); cursor: default; }
+
+/* Checkbox 18px, 2px outline; checked = primary fill. */
+.checkbox { display: inline-flex; align-items: center; gap: 15px; cursor: pointer; }
+.checkbox input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.checkbox-box { display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 2px solid var(--outline); border-radius: 2px; color: #fff; }
+.checkbox input:checked + .checkbox-box { background: var(--primary); border-color: var(--primary); }
+.checkbox input:disabled + .checkbox-box { opacity: 0.38; }
+.checkbox input:focus-visible + .checkbox-box { outline: 2px solid var(--primary); outline-offset: 3px; }
+
+/* Light brush-stroke card, radius 12. */
+.card { padding: 20px 16px; border-radius: 12px; text-align: center; background: url('./assets/card.svg') center / 100% 100% no-repeat; }
+
+/* Overlays */
+.scrim { position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; background: var(--scrim); }
+.scrim-center { align-items: center; justify-content: center; }
+.sheet { width: 100%; max-height: 90vh; overflow: auto; background: var(--surface); }
+.dialog { width: 281px; padding: 24px; border-radius: 28px; background: var(--dialog); }
+.dialog h2 { font-size: 24px; line-height: 32px; letter-spacing: 0; margin-bottom: 16px; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
+.dialog-actions button { min-width: 56px; height: 32px; padding: 0 12px; border: 0; border-radius: 16px; background: none; color: var(--primary); font-size: 14px; letter-spacing: 0.1px; }
+.drawer { position: fixed; inset: 0 auto 0 0; z-index: 11; width: 304px; overflow: auto; background: var(--surface); }
+.drawer-scrim { position: fixed; inset: 0; z-index: 10; background: var(--scrim); }
+
+/* Material-like overlay motion (screen changes themselves are instant, like the original). */
+@keyframes fade { from { opacity: 0; } }
+@keyframes slide-up { from { transform: translateY(100%); } }
+@keyframes slide-right { from { transform: translateX(-100%); } }
+@keyframes pop { from { opacity: 0; transform: scale(0.9); } }
+.scrim, .drawer-scrim { animation: fade 200ms ease-out; }
+.sheet { animation: slide-up 250ms cubic-bezier(0.2, 0, 0, 1); }
+.drawer { animation: slide-right 246ms cubic-bezier(0.2, 0, 0, 1); }
+.dialog { animation: pop 150ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; }
+}
+
+/* Kept for stage-2 layouts */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; }

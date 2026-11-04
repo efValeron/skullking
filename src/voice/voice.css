@@ -1,0 +1,15 @@
+/* Voice input block. No equivalent in the original: same visual language (red buttons, paper card). */
+.voice { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 10px; }
+/* Secondary look so it doesn't compete with the screen's main action; filled while listening. */
+.btn.btn-voice { gap: 10px; background: transparent; color: var(--primary); border-color: var(--primary); }
+.btn.btn-voice.listening { background: var(--primary); color: var(--on-primary); animation: voice-pulse 1.2s ease-in-out infinite; }
+@keyframes voice-pulse { 50% { box-shadow: 0 0 0 6px rgba(194, 82, 91, 0.25); } }
+.voice-interim { font-style: italic; opacity: 0.7; text-align: center; }
+.voice-draft { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.voice-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.voice-chips li { padding: 2px 10px; border: 1px solid var(--outline); border-radius: 14px; background: #f6ecd9; }
+.voice-note { font-size: 13px; opacity: 0.8; }
+.voice-actions { display: flex; justify-content: center; gap: 10px; }
+.voice-problem { color: #d03b3b; text-align: center; }
+.name-field.voice-target { outline: 2px solid var(--primary); outline-offset: -2px; }
+@media (prefers-reduced-motion: reduce) { .btn.btn-voice.listening { animation: none; } }
