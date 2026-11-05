@@ -99,7 +99,7 @@ await mic.click();
 await say('Аня');
 await say('один');
 assert.equal(await value('Аня').innerText(), '1', '«Аня» … pause … «один»');
-assert.equal(await value('Аня').getAttribute('class'), 'stepper-value voice-mark');
+assert.equal(await value('Аня').locator('mark').count(), 1, 'voice number highlighted');
 const starts = await page.evaluate(() => window.__starts);
 await push('END');
 assert.equal(await page.evaluate(() => window.__starts), starts + 1, 'restarted after the browser stopped');
@@ -118,7 +118,7 @@ ok('bids: pause, restart, later wins, «отмена», «всё»');
 
 // A manual edit starts over from the edited form: voice keeps it.
 await page.getByRole('group', { name: 'Дима', exact: true }).getByRole('button', { name: 'Больше' }).click();
-assert.equal(await page.locator('.stepper-value.voice-mark').count(), 0, 'manual edit clears the highlight');
+assert.equal(await page.locator('.stepper-value mark').count(), 0, 'manual edit clears the highlight');
 await mic.click();
 await say('Оля ноль');
 assert.deepEqual(await Promise.all(['Аня', 'Дима', 'Оля'].map((n) => value(n).innerText())), ['1', '1', '0']);

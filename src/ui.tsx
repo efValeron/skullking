@@ -61,7 +61,7 @@ export function Stepper(props: { label: string; value: number; onChange: (v: num
       <button className="circle" aria-label={t.decrease} disabled={disabled} onClick={() => set(value - step)}>
         <Icon name="minus" size={18} />
       </button>
-      <span className={mark ? 'stepper-value voice-mark' : 'stepper-value'}>{value}</span>
+      <span className="stepper-value">{mark ? <mark>{value}</mark> : value}</span>
       <button className="circle" aria-label={t.increase} disabled={disabled} onClick={() => set(value + step)}>
         <Icon name="plus" size={18} />
       </button>
@@ -71,12 +71,12 @@ export function Stepper(props: { label: string; value: number; onChange: (v: num
 
 export function Checkbox({ label, checked, onChange, disabled, hideLabel, mark }: { label: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean; hideLabel?: boolean; /** set by voice */ mark?: boolean }) {
   return (
-    <label className={mark ? 'checkbox voice-mark' : 'checkbox'}>
+    <label className="checkbox">
       <input type="checkbox" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} aria-label={hideLabel ? label : undefined} />
       <span className="checkbox-box" aria-hidden="true">
         {checked && <Icon name="check" size={16} />}
       </span>
-      {!hideLabel && <span>{label}</span>}
+      {!hideLabel && <span>{mark ? <mark>{label}</mark> : label}</span>}
     </label>
   );
 }
