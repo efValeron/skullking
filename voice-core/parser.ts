@@ -359,6 +359,7 @@ function parseBidsOne(text: string, idx: Index, ctx: { cards: number }): Parsed<
   const unknown: string[] = [];
   let cur: string | null = null;
   let fix = false;
+  let fresh = false; // имя только что названо: число заменяет сказанное раньше («Аня один … Аня два»)
   let i = 0;
   while (i < t.length) {
     const w = t[i] as string;
@@ -377,6 +378,7 @@ function parseBidsOne(text: string, idx: Index, ctx: { cards: number }): Parsed<
       cur = names[0] as string;
       named.push(cur);
       fix = false;
+      fresh = true;
       i++;
       continue;
     }
@@ -384,9 +386,10 @@ function parseBidsOne(text: string, idx: Index, ctx: { cards: number }): Parsed<
     if (num && cur) {
       if (num.value > ctx.cards) return fail('out_of_range', text, `${cur} ${num.value}`);
       const prev = bids.get(cur);
-      if (prev !== undefined && prev !== num.value && !fix) return fail('conflict', text, cur);
+      if (prev !== undefined && prev !== num.value && !fix && !fresh) return fail('conflict', text, cur);
       bids.set(cur, num.value);
       fix = false;
+      fresh = false;
       i += num.len;
       continue;
     }
@@ -416,6 +419,15 @@ function parseResultsOne(text: string, idx: Index, ctx: { cards: number }): Pars
   const addBonus = (who: string, pts: number): void => {
     bonus.set(who, (bonus.get(who) ?? 0) + pts);
   };
+  // Повторное упоминание игрока заменяет сказанное о нём раньше: первый бонус после имени ставится, а не
+  // прибавляется («Валера плюс двадцать … Валера плюс двадцать» = 20). Альянсы считаются в конце отдельно.
+  let mentionBonus = false;
+  const bonusHere = (pts: number): void => {
+    if (!cur) return;
+    if (mentionBonus) addBonus(cur, pts);
+    else bonus.set(cur, pts);
+    mentionBonus = true;
+  };
   // Лут и альянс: «альянс с Денисом» — пара, +20 обоим один раз; без партнёра +20 тому, кто сказал.
   const allies: { who: string; partner: string | null }[] = [];
   let ally: { who: string; partner: string | null } | null = null; // последнее упоминание у текущего игрока
@@ -424,6 +436,7 @@ function parseResultsOne(text: string, idx: Index, ctx: { cards: number }): Pars
   let cur: string | null = null;
   let inBonus = false; // после «бонус», «плюс» или события число кратное 10 — это бонус
   let fix = false;
+  let fresh = false; // имя только что названо: взятки заменяют сказанные раньше
   const drop = (): void => {
     cur = null;
     ally = null;
@@ -469,6 +482,8 @@ function parseResultsOne(text: string, idx: Index, ctx: { cards: number }): Pars
       seen.add(cur);
       inBonus = false;
       fix = false;
+      fresh = true;
+      mentionBonus = false;
       i++;
       continue;
     }
@@ -488,8 +503,9 @@ function parseResultsOne(text: string, idx: Index, ctx: { cards: number }): Pars
     if (cur) {
       const ev = readEvent(t, i, inBonus);
       if (ev) {
-        addBonus(cur, ev.pts);
+        bonusHere(ev.pts);
         inBonus = true;
+        fresh = false;
         i += ev.len;
         continue;
       }
@@ -498,16 +514,17 @@ function parseResultsOne(text: string, idx: Index, ctx: { cards: number }): Pars
         const v = n.value;
         const prev = tricks.get(cur);
         const bonusLike = v >= 10 && v % 10 === 0;
-        if (inBonus && bonusLike) addBonus(cur, v);
-        else if (prev === undefined || prev === v || fix) {
+        if (inBonus && bonusLike) bonusHere(v);
+        else if (prev === undefined || prev === v || fix || (fresh && v <= ctx.cards)) {
           if (v > ctx.cards) return fail('out_of_range', text, `${cur} ${v}`);
           tricks.set(cur, v);
           inBonus = false;
           fix = false;
         } else if (bonusLike) {
-          addBonus(cur, v); // «Валера два двадцать»: взятки уже названы
+          bonusHere(v); // «Валера два двадцать»: взятки уже названы
           inBonus = true;
         } else return fail('conflict', text, cur);
+        fresh = false;
         i += n.len;
         continue;
       }

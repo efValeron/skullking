@@ -7,19 +7,27 @@ const URL_ = process.argv[2] ?? 'http://localhost:5173/';
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ ...devices['Pixel 7'], viewport: { width: 390, height: 844 }, locale: 'ru-RU' });
 await ctx.addInitScript(() => {
+  // Queue items: { alts, final } — a result; 'END' — the browser stops by itself after a pause.
   window.__say = [];
+  window.__starts = 0;
   class FakeRec {
     start() {
-      const alts = window.__say.shift() ?? [];
-      setTimeout(() => {
-        if (alts.length) {
-          const res = Object.assign(alts.map((transcript) => ({ transcript })), { isFinal: true });
-          this.onresult?.({ resultIndex: 0, results: [res] });
-        } else this.onerror?.({ error: 'no-speech' });
-        this.onend?.();
-      }, 20);
+      window.__starts++;
+      this.t = setInterval(() => {
+        const x = window.__say.shift();
+        if (!x) return;
+        if (x === 'END') {
+          clearInterval(this.t);
+          return this.onend?.();
+        }
+        const res = Object.assign(x.alts.map((transcript) => ({ transcript })), { isFinal: x.final });
+        this.onresult?.({ resultIndex: 0, results: [res] });
+      }, 15);
     }
-    stop() {}
+    stop() {
+      clearInterval(this.t);
+      setTimeout(() => this.onend?.(), 5);
+    }
   }
   window.SpeechRecognition = FakeRec;
 });
@@ -31,87 +39,105 @@ await page.evaluate(() => localStorage.clear());
 await page.reload();
 
 const btn = (name) => page.getByRole('button', { name, exact: true });
-const say = async (...alts) => {
-  await page.evaluate((a) => window.__say.push(a), alts);
-  await page.getByRole('button', { name: /^(Говорить|Слушаю)/ }).click();
-  await page.waitForTimeout(80);
+const mic = btn('Говорить');
+const listening = async () => (await mic.getAttribute('aria-pressed')) === 'true';
+const push = async (item) => {
+  await page.evaluate((x) => window.__say.push(x), item);
+  await page.waitForFunction(() => window.__say.length === 0);
+  await page.waitForTimeout(60);
 };
+const say = (...alts) => push({ alts, final: true });
+const partial = (text) => push({ alts: [text], final: false });
 const text = (s) => page.getByText(s, { exact: false });
-const value = (group) => page.getByRole('group', { name: group, exact: true }).locator('.stepper-value').innerText();
+const value = (group) => page.getByRole('group', { name: group, exact: true }).locator('.stepper-value');
 const ok = (m) => console.log('ok ', m);
 
-// Names: several in one phrase fill the fields and add rows; table talk is rejected; undo restores.
+// Names: the mic is in the app bar; names go straight into the fields, live and highlighted.
 await btn('Начать новую игру').click();
 const fields = () => page.locator('input.name-field').evaluateAll((els) => els.map((e) => e.value));
+await mic.click();
+assert.equal(await listening(), true);
+await partial('Аня');
+assert.deepEqual(await fields(), ['Аня', ''], 'filled while still speaking');
 await say('Аня, Дима и Оля Иван');
 assert.deepEqual(await fields(), ['Аня', 'Дима', 'Оля', 'Иван']);
+assert.equal(await page.locator('input.name-field.voice-mark').count(), 4, 'voice fields highlighted');
 await say('Катя, ходи уже');
 assert.equal(await text('Не понял: «Катя, ходи уже»').count(), 1);
 assert.deepEqual(await fields(), ['Аня', 'Дима', 'Оля', 'Иван'], 'noise changed nothing');
 await btn('Вернуть как было').click();
 assert.deepEqual(await fields(), ['', '']);
-ok('several names in one phrase, noise rejected, undo');
+ok('names live into the fields, noise rejected, undo');
 
-// Names one by one still work; noise and duplicates rejected; a third name adds a row.
 await say('Аня');
-await say('Дима');
-await say('Аня два');
-assert.equal(await text('Не понял: «Аня два»').count(), 1);
 await say('Аня');
 assert.equal(await text('такое имя уже есть').count(), 1);
-await say('Оля');
-assert.deepEqual(await page.locator('input.name-field').evaluateAll((els) => els.map((e) => e.value)), ['Аня', 'Дима', 'Оля']);
-ok('names by voice, noise and duplicate rejected');
-await btn('Вернуть как было').click();
-assert.equal(await page.locator('input.name-field').count(), 2);
-await say('Оля');
-ok('undo last name');
+await say('Дима Оля готово');
+assert.deepEqual(await fields(), ['Аня', 'Дима', 'Оля']);
+assert.equal(await listening(), false, 'stop word ends listening');
+ok('duplicate rejected, «готово» stops the mic');
 
 await btn('Новая игра').click();
 await btn('Начать игру').click(); // 10 rounds, round 1 = 1 card
 
-// Bids: draft with default zeros, noise doesn't break it, «принять» by voice.
-await say('Аня один');
-assert.equal(await text('Оля 0 (по умолчанию)').count(), 1);
+// Bids: a pause keeps the context, the browser's own stop is restarted, a later mention wins.
+await mic.click();
+await say('Аня');
+await say('один');
+assert.equal(await value('Аня').innerText(), '1', '«Аня» … pause … «один»');
+assert.equal(await value('Аня').getAttribute('class'), 'stepper-value voice-mark');
+const starts = await page.evaluate(() => window.__starts);
+await push('END');
+assert.equal(await page.evaluate(() => window.__starts), starts + 1, 'restarted after the browser stopped');
+assert.equal(await listening(), true);
 await say('Дима, у тебя два туза');
-assert.equal(await text('Не понял').count(), 1);
-assert.equal(await value('Аня'), '0', 'nothing applied before accept');
-await say('принять');
-assert.equal(await value('Аня'), '1');
+assert.equal(await text('Не понял и пропустил').count(), 1);
+assert.equal(await value('Дима').innerText(), '0');
+await say('Аня ноль');
+assert.equal(await value('Аня').innerText(), '0', 'later mention wins');
+await say('отмена');
+assert.equal(await value('Аня').innerText(), '1', '«отмена» undoes the last phrase');
+await say('всё');
+assert.equal(await listening(), false);
 assert.equal(await text('В игре 1 ставок из 1').count(), 1);
-ok('bids draft → accept by voice');
-await btn('Вернуть как было').click();
-assert.equal(await value('Аня'), '0');
-await say('Аня один');
-await btn('Принять').click();
-assert.equal(await value('Аня'), '1');
-ok('bids undo and accept by tap');
+ok('bids: pause, restart, later wins, «отмена», «всё»');
+
+// A manual edit starts over from the edited form: voice keeps it.
+await page.getByRole('group', { name: 'Дима', exact: true }).getByRole('button', { name: 'Больше' }).click();
+assert.equal(await page.locator('.stepper-value.voice-mark').count(), 0, 'manual edit clears the highlight');
+await mic.click();
+await say('Оля ноль');
+assert.deepEqual(await Promise.all(['Аня', 'Дима', 'Оля'].map((n) => value(n).innerText())), ['1', '1', '0']);
+await mic.click();
+assert.equal(await listening(), false, 'second tap stops');
+ok('manual edit kept by later voice');
 await btn('Начать раунд').click();
 
-// Results: sum mismatch blocks accept; parts merge; bonus warning.
+// Results: written into the round at once; the sum and an ignored bonus show in the app bar.
+await mic.click();
+await partial('Аня ноль');
+assert.equal(await value('Аня: Взято').innerText(), '0');
 await say('Аня ноль');
-assert.equal(await btn('Принять').isDisabled(), true);
 assert.equal(await text('Сумма взяток 0, нужно 1').count(), 1);
+assert.equal(await btn('Завершить раунд').isDisabled(), true);
 await say('Дима один Аня бонус двадцать');
-assert.equal(await btn('Принять').isEnabled(), true);
+assert.equal(await value('Дима: Взято').innerText(), '1');
+assert.equal(await value('Аня: Бонусы').innerText(), '20');
 assert.equal(await text('бонус 20 не засчитается').count(), 1);
-assert.equal(await value('Дима: Взято'), '0', 'nothing applied before accept');
-await btn('Принять').click();
-assert.equal(await value('Дима: Взято'), '1');
-assert.equal(await value('Аня: Бонусы'), '20');
 assert.equal(await btn('Завершить раунд').isEnabled(), true);
-ok('results: block on mismatch, merge parts, accept');
+await say('стоп');
+ok('results straight into the round, hints in the app bar');
 await btn('Завершить раунд').click();
-assert.deepEqual((await page.locator('td[data-round="1"] .total').allInnerTexts()).map(Number), [-10, -10, 10]);
-ok('scores after voice round: -10, -10, 10');
+assert.deepEqual((await page.locator('td[data-round="1"] .total').allInnerTexts()).map(Number), [-10, 20, 10]);
+ok('scores after voice round: -10, 20, 10');
 
 // Round 2: Kraken by voice.
 await btn('Следующий раунд').click();
-await say('Аня два');
-await say('принять');
+await mic.click();
+await say('Аня два всё');
 await btn('Начать раунд').click();
+await mic.click();
 await say('кракен Аня один');
-await say('принять');
 assert.equal(await page.getByLabel('Кракен').isChecked(), true);
 assert.equal(await btn('Завершить раунд').isEnabled(), true);
 ok('kraken by voice');

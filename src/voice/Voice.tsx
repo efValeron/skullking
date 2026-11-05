@@ -1,47 +1,141 @@
-// «Говорить» button + draft panel shared by the three voice windows (names, bids, round results).
-import { useEffect, useRef, useState } from 'react';
+// Voice input shared by the three voice windows (names, bids, round results): mic and undo in the app bar,
+// what the mic hears in place of the title, phrases written straight into the screen's fields.
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import type { Fail } from '../../voice-core/parser';
 import { t } from '../i18n';
-import { Button, Icon } from '../ui';
+import { Icon } from '../ui';
 import { createWebSpeechEngine, speechCtor, type SpeechEngine } from './engine';
-import { ENGINE_ERROR } from './drafts';
+import { ENGINE_ERROR, failText, voiceCommand, type ApplyPhrase } from './drafts';
 import './voice.css';
 
-export interface Speech {
+export interface Voice {
   supported: boolean;
   listening: boolean;
-  interim: string;
-  error: string | null;
+  /** What the mic hears now, or the last phrase. */
+  line: string;
+  /** Rejected phrase or engine error (error), or a parser note. */
+  note: { text: string; error: boolean } | null;
+  /** Fields set by voice since the last manual edit (`bid:0`, `trick:1`, `kraken`…). */
+  marks: Set<string>;
+  canUndo: boolean;
   toggle: () => void;
+  undo: () => void;
 }
 
-/** Mic is on only between a tap on «Говорить» and the end of one phrase (no wake word). */
-export function useSpeech(onPhrase: (alternatives: string[]) => void): Speech {
+/** Failures that may be a phrase cut by a pause («Валера…» — «…один»): kept as context for the next one. */
+const SOFT = new Set<Fail['reason']>(['empty', 'no_pairs', 'unknown_word']);
+const NO_MARKS = new Set<string>();
+
+/**
+ * Everything said since the last manual edit is one text, parsed again over the form as it was (`base`):
+ * a pause keeps the context, a later mention wins, a rejected phrase is dropped, undo drops the last one.
+ */
+interface Session<S> {
+  base: S;
+  steps: { text: string; soft: boolean }[];
+  /** JSON of the form as the voice last wrote it: anything else means a manual edit. */
+  written: string;
+}
+
+/** Mic stays on (pauses included) until a stop word, a second tap or leaving the screen. */
+export function useVoice<S>(state: S, setState: (s: S) => void, apply: ApplyPhrase<S>): Voice {
   const [listening, setListening] = useState(false);
-  const [interim, setInterim] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [line, setLine] = useState('');
+  const [note, setNote] = useState<Voice['note']>(null);
+  const [marks, setMarks] = useState<Set<string>>(() => new Set());
+  const [canUndo, setCanUndo] = useState(false);
   const engine = useRef<SpeechEngine | null>(null);
-  const handler = useRef(onPhrase);
-  handler.current = onPhrase;
+  const session = useRef<Session<S> | null>(null);
+  const latest = useRef({ state, setState, apply });
+  latest.current = { state, setState, apply };
+
+  const json = JSON.stringify(state);
+  useEffect(() => {
+    if (session.current && session.current.written !== json) {
+      session.current = null; // manual edit: the next phrase starts from the edited form
+      setMarks(new Set());
+      setCanUndo(false);
+    }
+  }, [json]);
   useEffect(() => () => engine.current?.stop(), []);
 
+  const open = (): Session<S> => (session.current ??= { base: latest.current.state, steps: [], written: JSON.stringify(latest.current.state) });
+  const said = (s: Session<S>) => s.steps.at(-1)?.text ?? '';
+  const write = (s: Session<S>, next: S, m: string[]) => {
+    s.written = JSON.stringify(next);
+    latest.current.setState(next);
+    setMarks(new Set(m));
+  };
+  /** Form = base + everything kept so far. */
+  const replay = (s: Session<S>) => {
+    const r = said(s) ? latest.current.apply([said(s)], s.base) : null;
+    if (r?.ok) write(s, r.state, r.marks);
+    else write(s, s.base, []);
+    setCanUndo(s.steps.some((x) => !x.soft));
+  };
+
+  /** Interim text fills the form provisionally; a final phrase is kept unless rejected. */
+  const hear = (alts: string[], final: boolean) => {
+    const s = open();
+    const prefix = said(s);
+    const full = alts.map((a) => (prefix ? `${prefix} ${a}` : a));
+    const r = latest.current.apply(full, s.base);
+    if (r.ok) {
+      write(s, r.state, r.marks);
+      if (final) {
+        s.steps.push({ text: r.heard, soft: false });
+        setCanUndo(true);
+      }
+      setNote(r.warnings.length ? { text: r.warnings.at(-1)!, error: false } : null);
+      return;
+    }
+    if (!final) return; // still speaking: keep the last provisional fill
+    if (SOFT.has(r.reason)) s.steps.push({ text: full[0]!, soft: true });
+    else setNote({ text: failText({ ...r, heard: alts[0] ?? '' }), error: true });
+    replay(s);
+  };
+
+  const undo = () => {
+    const s = session.current;
+    if (!s) return;
+    while (s.steps.pop()?.soft); // trailing context, then one phrase
+    setNote(null);
+    replay(s);
+  };
+
+  const stop = () => {
+    engine.current?.stop();
+    setListening(false);
+    setLine('');
+  };
+
+  const handlers = useRef({ hear, undo, stop });
+  handlers.current = { hear, undo, stop };
+
   const toggle = () => {
-    if (listening) return engine.current?.stop();
+    if (listening) return stop();
     if (!engine.current) {
       const e = createWebSpeechEngine('ru-RU');
       if (!e) return;
-      e.onInterim = setInterim;
-      e.onResult = (alts) => {
-        setInterim('');
-        handler.current(alts);
+      e.onInterim = (text) => {
+        setLine(text);
+        if (text.trim()) handlers.current.hear([text], false);
       };
-      e.onError = (code) => code !== 'aborted' && setError(ENGINE_ERROR[code] ?? `Ошибка распознавания: ${code}`);
+      e.onResult = (alts) => {
+        setLine(alts[0] ?? '');
+        const cmd = voiceCommand(alts);
+        if (cmd.cancel) handlers.current.undo();
+        else if (cmd.rest.length) handlers.current.hear(cmd.rest, true);
+        if (cmd.stop) handlers.current.stop();
+      };
+      e.onError = (code) => setNote({ text: ENGINE_ERROR[code] ?? `Ошибка распознавания: ${code}`, error: true });
       e.onEnd = () => {
         setListening(false);
-        setInterim('');
+        setLine('');
       };
       engine.current = e;
     }
-    setError(null);
+    setNote(null);
     setListening(true);
     try {
       engine.current.start();
@@ -50,71 +144,47 @@ export function useSpeech(onPhrase: (alternatives: string[]) => void): Speech {
     }
   };
 
+  // A manual edit hides marks and undo in this very render (the effect above drops the session after it).
+  const current = session.current?.written === json;
   // Any UI language: commands are Russian (voice-core grammar), recognition is always ru-RU.
-  return { supported: !!speechCtor(), listening, interim, error, toggle };
+  return { supported: !!speechCtor(), listening, line, note, marks: current ? marks : NO_MARKS, canUndo: current && canUndo, toggle, undo };
 }
 
-
-export interface VoiceBoxProps {
-  speech: Speech;
-  /** Draft as chips; null when there is no draft. */
-  chips: string[] | null;
-  /** Rejected phrase or blocking problem (shown in red). */
-  problem?: string | null;
-  /** Non-blocking notes (similar names, bonus that won't count). */
-  notes?: string[];
-  /** Accept disabled (e.g. tricks don't add up). */
-  blocked?: boolean;
-  onAccept?: () => void;
-  onCancel?: () => void;
-  /** Undo the last accepted draft. */
-  onUndo?: (() => void) | null;
-}
-
-export function VoiceBox({ speech, chips, problem, notes = [], blocked, onAccept, onCancel, onUndo }: VoiceBoxProps) {
-  if (!speech.supported) return null;
-  const message = problem ?? speech.error;
+/**
+ * App bar text while voice is in use: what the mic hears (or the title) and a note under it.
+ * `hints` (e.g. the sum of tricks) show while listening when there is no other note. Null: show the title.
+ */
+export function voiceLive(v: Voice, title: string, hints: string[] = []): ReactNode {
+  // After stopping only errors stay (no mic access, a rejected last phrase); parser notes go with the mic.
+  const own = v.note && (v.listening || v.note.error) ? v.note : null;
+  const note = own ?? (v.listening && hints.length ? { text: hints.join('; '), error: false } : null);
+  if (!v.supported || (!v.listening && !note)) return null;
   return (
-    <section className="voice" aria-label={t.speak}>
-      <button className={speech.listening ? 'btn btn-voice listening' : 'btn btn-voice'} onClick={speech.toggle} aria-pressed={speech.listening}>
-        <Icon name="mic" size={20} />
-        <span>{speech.listening ? t.listening : t.speak}</span>
-      </button>
-      {speech.interim && <p className="voice-interim">{speech.interim}</p>}
-      {chips && (
-        <div className="voice-draft card" role="status">
-          <ul className="voice-chips">
-            {chips.map((c, i) => (
-              <li key={i}>{c}</li>
-            ))}
-          </ul>
-          {onAccept && (
-            <div className="voice-actions">
-              <Button small outline onClick={onCancel ?? (() => {})}>
-                {t.cancel}
-              </Button>
-              <Button small disabled={blocked} onClick={onAccept}>
-                {t.accept}
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
-      {notes.map((n, i) => (
-        <p key={i} className="voice-note">
-          {n}
-        </p>
-      ))}
-      {message && (
-        <p className="voice-problem" role="alert">
-          {message}
-        </p>
-      )}
-      {onUndo && (
-        <Button small onClick={onUndo}>
-          {t.undo}
-        </Button>
-      )}
-    </section>
+    <div className="voice-live" aria-live="polite">
+      <p className={v.listening ? 'voice-line on' : 'voice-line'}>
+        <span dir="ltr">{v.listening ? v.line || t.listening : title}</span>
+      </p>
+      {note && <p className={note.error ? 'voice-note error' : 'voice-note'}>{note.text}</p>}
+    </div>
   );
 }
+
+/** Undo (after a voice change) and the mic, on the right of the app bar. */
+export function VoiceButtons({ voice }: { voice: Voice }) {
+  if (!voice.supported) return null;
+  return (
+    <>
+      {voice.canUndo && (
+        <button className="appbar-btn" aria-label={t.undo} onClick={voice.undo}>
+          <Icon name="undo" />
+        </button>
+      )}
+      <button className={voice.listening ? 'appbar-btn mic on' : 'appbar-btn mic'} aria-label={t.speak} aria-pressed={voice.listening} onClick={voice.toggle}>
+        <Icon name="mic" />
+      </button>
+    </>
+  );
+}
+
+/** Class for a field the voice set. */
+export const marked = (v: Voice, key: string, cls = ''): string => (v.marks.has(key) ? `${cls} voice-mark`.trim() : cls);

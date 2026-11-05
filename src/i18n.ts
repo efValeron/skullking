@@ -78,8 +78,6 @@ const en = {
   share: 'Share table',
   speak: 'Speak',
   listening: 'Listening…',
-  accept: 'Accept',
-  cancel: 'Cancel',
   undo: 'Undo',
   locale: 'en-US',
 };
@@ -168,8 +166,6 @@ const ru: Strings = {
   share: 'Поделиться таблицей',
   speak: 'Говорить',
   listening: 'Слушаю…',
-  accept: 'Принять',
-  cancel: 'Отмена',
   undo: 'Вернуть как было',
   locale: 'ru-RU',
 };

@@ -1,10 +1,10 @@
 // Shared building blocks; styles in app.css.
 import type { ReactNode } from 'react';
-import { ArrowLeft, Check, GripVertical, Menu, Mic, Minus, PlayingCardsFan, Plus, Star, Trash2, X, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, Check, GripVertical, Menu, Mic, Minus, PlayingCardsFan, Plus, Star, Trash2, Undo2, X, type LucideIcon } from 'lucide-react';
 import { t } from './i18n';
 
 // One icon set (Lucide, ISC): rounded strokes that match the rounded type and card stock.
-const ICONS = { menu: Menu, back: ArrowLeft, close: X, drag: GripVertical, star: Star, check: Check, cards: PlayingCardsFan, minus: Minus, plus: Plus, mic: Mic, trash: Trash2 } satisfies Record<string, LucideIcon>;
+const ICONS = { menu: Menu, back: ArrowLeft, close: X, drag: GripVertical, star: Star, check: Check, cards: PlayingCardsFan, minus: Minus, plus: Plus, mic: Mic, trash: Trash2, undo: Undo2 } satisfies Record<string, LucideIcon>;
 
 export const Icon = ({ name, size = 24 }: { name: keyof typeof ICONS; size?: number }) => {
   const Svg = ICONS[name];
@@ -18,7 +18,16 @@ export const DealerMark = () => (
   </span>
 );
 
-export function AppBar({ title, icon, onIcon }: { title: string; icon?: 'menu' | 'back' | 'close'; onIcon?: () => void }) {
+export function AppBar(props: {
+  title: string;
+  icon?: 'menu' | 'back' | 'close';
+  onIcon?: () => void;
+  /** Shown in place of the title (voice input); the h1 stays for screen readers. */
+  live?: ReactNode;
+  /** Buttons on the right (voice). */
+  children?: ReactNode;
+}) {
+  const { title, icon, onIcon, live, children } = props;
   const label = icon === 'menu' ? t.menuOpen : icon === 'back' ? t.back : t.close;
   return (
     <header className={icon ? 'appbar' : 'appbar appbar-plain'}>
@@ -27,7 +36,9 @@ export function AppBar({ title, icon, onIcon }: { title: string; icon?: 'menu' |
           <Icon name={icon} />
         </button>
       )}
-      <h1>{title}</h1>
+      <h1 className={live ? 'visually-hidden' : undefined}>{title}</h1>
+      {live}
+      {children && <div className="appbar-end">{children}</div>}
     </header>
   );
 }
@@ -42,15 +53,15 @@ export function Button(props: { children: ReactNode; onClick: () => void; disabl
 }
 
 /** − value +; clamps to [min, max]. `label` names the group for screen readers and tests. */
-export function Stepper(props: { label: string; value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number; disabled?: boolean }) {
-  const { label, value, onChange, min = 0, max = Infinity, step = 1, disabled } = props;
+export function Stepper(props: { label: string; value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number; disabled?: boolean; /** set by voice: highlighted */ mark?: boolean }) {
+  const { label, value, onChange, min = 0, max = Infinity, step = 1, disabled, mark } = props;
   const set = (v: number) => onChange(Math.min(max, Math.max(min, v)));
   return (
     <div className="stepper" role="group" aria-label={label}>
       <button className="circle" aria-label={t.decrease} disabled={disabled} onClick={() => set(value - step)}>
         <Icon name="minus" size={18} />
       </button>
-      <span className="stepper-value">{value}</span>
+      <span className={mark ? 'stepper-value voice-mark' : 'stepper-value'}>{value}</span>
       <button className="circle" aria-label={t.increase} disabled={disabled} onClick={() => set(value + step)}>
         <Icon name="plus" size={18} />
       </button>
@@ -58,9 +69,9 @@ export function Stepper(props: { label: string; value: number; onChange: (v: num
   );
 }
 
-export function Checkbox({ label, checked, onChange, disabled, hideLabel }: { label: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean; hideLabel?: boolean }) {
+export function Checkbox({ label, checked, onChange, disabled, hideLabel, mark }: { label: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean; hideLabel?: boolean; /** set by voice */ mark?: boolean }) {
   return (
-    <label className="checkbox">
+    <label className={mark ? 'checkbox voice-mark' : 'checkbox'}>
       <input type="checkbox" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} aria-label={hideLabel ? label : undefined} />
       <span className="checkbox-box" aria-hidden="true">
         {checked && <Icon name="check" size={16} />}

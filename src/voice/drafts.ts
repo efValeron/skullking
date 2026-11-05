@@ -1,15 +1,17 @@
-// Glue between voice-core drafts and the game. Voice never writes the game directly:
-// screens keep a draft, the user accepts it (docs/voice-design.md, «Принципы отсева шума»).
-import {
-  completeBids,
-  parseName,
-  validateResults,
-  type BidsDraft,
-  type Fail,
-  type Issue,
-  type ResultsDraft,
-} from '../../voice-core/parser';
+// Glue between voice-core and the screens. Voice fills the open screen's fields (highlighted, undoable);
+// the game takes them only through the screen's own buttons (docs/voice-design.md, «Принципы отсева шума»).
+import { parseBids, parseName, parseResults, validateResults, type Fail, type Issue, type ResultsDraft } from '../../voice-core/parser';
 import type { Round } from '../game/model';
+
+/** A phrase applied to a screen's form: the new form, the fields it set (highlighted), notes. */
+export interface Applied<S> {
+  ok: true;
+  state: S;
+  marks: string[];
+  warnings: string[];
+  heard: string;
+}
+export type ApplyPhrase<S> = (alternatives: string[], base: S) => Applied<S> | Fail;
 
 // ---------- names: several in one phrase ----------
 
@@ -65,12 +67,22 @@ export function fillNames(fields: string[], names: string[]): string[] {
 }
 
 const word = (s: string) => s.toLowerCase().replace(/[^a-zа-яё]/g, '');
-const ACCEPT = ['принять', 'принимаю'];
-const CANCEL = ['отмена', 'отменить'];
+const CANCEL = ['отмена', 'отменить', 'отмени'];
+/** Said at the end of a phrase: stop listening. */
+const STOP = ['стоп', 'готово', 'всё', 'все', 'хватит'];
+const lastWord = (s: string) => s.trim().split(/\s+/).pop() ?? '';
 
-/** «принять» / «отмена» said instead of a draft phrase. */
-export const voiceCommand = (alts: string[]): 'accept' | 'cancel' | null =>
-  alts.some((a) => ACCEPT.includes(word(a))) ? 'accept' : alts.some((a) => CANCEL.includes(word(a))) ? 'cancel' : null;
+/**
+ * «отмена» alone undoes the last phrase; a stop word at the end («…Миша ноль, всё») stops listening,
+ * the rest of the phrase still counts.
+ */
+export function voiceCommand(alts: string[]): { cancel: boolean; stop: boolean; rest: string[] } {
+  if (alts.some((a) => CANCEL.includes(word(a)))) return { cancel: true, stop: false, rest: [] };
+  const stop = STOP.includes(word(lastWord(alts[0] ?? '')));
+  if (!stop) return { cancel: false, stop, rest: alts };
+  const rest = alts.map((a) => (STOP.includes(word(lastWord(a))) ? a.trim().replace(/\S+$/, '') : a).trim()).filter(Boolean);
+  return { cancel: false, stop, rest };
+}
 
 // Voice works for Russian only (voice-core grammar), so these texts are Russian.
 const REASON: Record<Fail['reason'], string> = {
@@ -89,7 +101,6 @@ export const failText = (f: Fail): string =>
 export const ENGINE_ERROR: Record<string, string> = {
   'not-allowed': 'Нет доступа к микрофону',
   'service-not-allowed': 'Нет доступа к микрофону',
-  'no-speech': 'Ничего не расслышал',
   'audio-capture': 'Микрофон не найден',
   network: 'Нет связи с распознаванием речи',
 };
@@ -97,41 +108,62 @@ export const ENGINE_ERROR: Record<string, string> = {
 /** Names of players still in the round (away players can't be named). */
 export const activeNames = (names: string[], r: Round): string[] => names.filter((_, i) => !r.players[i]?.away);
 
+/** Names: they fill the empty fields of `base` in order (fillNames). */
+export const applyNames: ApplyPhrase<string[]> = (alts, base) => {
+  const res = namesFromVoice(alts, base.filter((n) => n.trim()));
+  if (!res.ok) return res;
+  if (!res.names.length) return { ok: false, reason: 'empty', heard: res.heard };
+  const state = fillNames(base, res.names);
+  const marks = state.flatMap((n, i) => (n !== base[i] ? [`name:${i}`] : []));
+  return { ok: true, state, marks, warnings: res.warnings, heard: res.heard };
+};
+
 // ---------- bids ----------
 
-/** Accepted bids: named players get their number, the rest 0; away players keep theirs. */
-export function bidsFromDraft(names: string[], r: Round, d: BidsDraft): number[] {
-  const full = completeBids(d, activeNames(names, r));
-  return r.players.map((p, i) => (p.away ? p.bid : (full[names[i]!] ?? 0)));
-}
-
-export const bidsChips = (names: string[], r: Round, d: BidsDraft): string[] =>
-  activeNames(names, r).map((n) => (d.bids[n] === undefined ? `${n} 0 (по умолчанию)` : `${n} ${d.bids[n]}`));
+/** Bids: named players get their number, the rest keep theirs (away players aren't in the grammar). */
+export const applyBids =
+  (names: string[], r: Round): ApplyPhrase<number[]> =>
+  (alts, base) => {
+    const res = parseBids(alts, activeNames(names, r), { cards: r.cardsInRound });
+    if (!res.ok) return res;
+    const { bids } = res.draft;
+    return {
+      ok: true,
+      state: base.map((b, i) => bids[names[i]!] ?? b),
+      marks: Object.keys(bids).map((n) => `bid:${names.indexOf(n)}`),
+      warnings: res.warnings,
+      heard: res.heard,
+    };
+  };
 
 // ---------- round results ----------
 
-/** Accepted results: tricks for every active player (unnamed = 0), bonus only for named, Kraken if said. */
+/** Results over the round: tricks and bonus only for named players, Kraken if said. */
 export const roundFromDraft = (names: string[], r: Round, d: ResultsDraft): Round => ({
   ...r,
   kraken: d.kraken ?? r.kraken,
-  players: r.players.map((p, i) => (p.away ? p : { ...p, trick: d.tricks[names[i]!] ?? 0, bonus: d.bonus[names[i]!] ?? p.bonus })),
+  players: r.players.map((p, i) => (p.away ? p : { ...p, trick: d.tricks[names[i]!] ?? p.trick, bonus: d.bonus[names[i]!] ?? p.bonus })),
 });
 
-export const resultIssues = (names: string[], r: Round, d: ResultsDraft): Issue[] =>
-  validateResults({
-    players: activeNames(names, r),
-    cards: r.cardsInRound,
-    draft: d,
-    kraken: r.kraken,
-    bids: Object.fromEntries(r.players.map((p, i) => [names[i]!, p.bid])),
-  });
+export const applyResults =
+  (names: string[]): ApplyPhrase<Round> =>
+  (alts, base) => {
+    const res = parseResults(alts, activeNames(names, base), { cards: base.cardsInRound });
+    if (!res.ok) return res;
+    const d = res.draft;
+    const at = (key: string) => (n: string) => `${key}:${names.indexOf(n)}`;
+    const marks = [...Object.keys(d.tricks).map(at('trick')), ...Object.keys(d.bonus).map(at('bonus')), ...(d.kraken === undefined ? [] : ['kraken'])];
+    return { ok: true, state: roundFromDraft(names, base, d), marks, warnings: res.warnings, heard: res.heard };
+  };
 
-export function resultChips(names: string[], r: Round, d: ResultsDraft): string[] {
-  const out = activeNames(names, r).map((n) => {
-    const tr = d.tricks[n];
-    const bonus = d.bonus[n] ? ` +${d.bonus[n]}` : '';
-    return tr === undefined ? `${n} 0 (по умолчанию)${bonus}` : `${n} ${tr}${bonus}`;
+/** Checks of the round as it stands (sum of tricks, bonus that won't count): shown while dictating. */
+export function roundIssues(names: string[], r: Round): Issue[] {
+  const act = r.players.flatMap((p, i) => (p.away ? [] : [{ p, n: names[i]! }]));
+  return validateResults({
+    players: act.map((a) => a.n),
+    cards: r.cardsInRound,
+    draft: { tricks: Object.fromEntries(act.map((a) => [a.n, a.p.trick])), bonus: Object.fromEntries(act.map((a) => [a.n, a.p.bonus])) },
+    kraken: r.kraken,
+    bids: Object.fromEntries(act.map((a) => [a.n, a.p.bid])),
   });
-  if (d.kraken !== undefined) out.push(d.kraken ? 'Кракен' : 'без Кракена');
-  return out;
 }

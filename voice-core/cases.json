@@ -25,7 +25,9 @@
     { "say": ["раунд закончился"], "cards": 5, "expect": { "ok": false, "reason": "unknown_word" } },
     { "say": ["Аня два ходи Дима один"], "cards": 5, "expect": { "ok": true, "bids": { "Аня": 2, "Дима": 1 }, "warnings": 1 } },
     { "say": ["Аня шесть"], "cards": 5, "expect": { "ok": false, "reason": "out_of_range" } },
-    { "say": ["Аня один Аня два"], "cards": 5, "expect": { "ok": false, "reason": "conflict" } },
+    { "say": ["Аня один Аня два"], "cards": 5, "expect": { "ok": true, "bids": { "Аня": 2 } } },
+    { "say": ["Аня один Дима ноль Аня два"], "cards": 5, "expect": { "ok": true, "bids": { "Аня": 2, "Дима": 0 } } },
+    { "say": ["Аня один два"], "cards": 5, "expect": { "ok": false, "reason": "conflict" } },
     { "say": [""], "cards": 5, "expect": { "ok": false, "reason": "empty" } }
   ],
   "results": [
@@ -73,7 +75,12 @@
     { "say": ["Аня бонус"], "cards": 5, "expect": { "ok": false, "reason": "no_pairs" } },
     { "say": ["Аня шесть"], "cards": 5, "expect": { "ok": false, "reason": "out_of_range" } },
     { "say": ["Оля четырнадцать"], "cards": 5, "expect": { "ok": false, "reason": "out_of_range" } },
-    { "say": ["Аня два Аня три"], "cards": 5, "expect": { "ok": false, "reason": "conflict" } }
+    { "say": ["Аня два Аня три"], "cards": 5, "expect": { "ok": true, "tricks": { "Аня": 3 } } },
+    { "say": ["Валера один бонус двадцать Денис ноль Валера два"], "cards": 5, "expect": { "ok": true, "tricks": { "Валера": 2, "Денис": 0 }, "bonus": { "Валера": 20 } } },
+    { "say": ["Валера один плюс двадцать Валера один плюс двадцать"], "cards": 5, "expect": { "ok": true, "tricks": { "Валера": 1 }, "bonus": { "Валера": 20 } } },
+    { "say": ["Валера один Валера двадцать"], "cards": 5, "expect": { "ok": true, "tricks": { "Валера": 1 }, "bonus": { "Валера": 20 } } },
+    { "say": ["Валера один альянс с Денисом Денис ноль Валера пират пирата"], "cards": 5, "expect": { "ok": true, "tricks": { "Валера": 1, "Денис": 0 }, "bonus": { "Валера": 50, "Денис": 20 } } },
+    { "say": ["Аня два три"], "cards": 5, "expect": { "ok": false, "reason": "conflict" } }
   ],
   "validate": [
     { "players": ["Аня", "Дима", "Оля"], "cards": 5, "draft": { "tricks": { "Аня": 2, "Дима": 1, "Оля": 2 }, "bonus": {} }, "expectIssues": [] },

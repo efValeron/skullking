@@ -6,8 +6,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { dealerAfterRemove, namesValid, suggestNames } from '../game/model';
 import { t } from '../i18n';
 import { AppBar, Button, Checkbox, Icon } from '../ui';
-import { failText, fillNames, namesFromVoice } from '../voice/drafts';
-import { useSpeech, VoiceBox } from '../voice/Voice';
+import { applyNames } from '../voice/drafts';
+import { marked, useVoice, VoiceButtons, voiceLive } from '../voice/Voice';
 import './forms.css';
 
 export interface PlayersProps {
@@ -74,22 +74,14 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
   // Voice (create only): one phrase can hold several names («Аня, Дима и Оля»); they fill the empty
   // fields in order, extra ones add rows. The form itself is the draft: nothing reaches the game before «Новая игра».
   const target = names.findIndex((n) => !n.trim());
-  const [problem, setProblem] = useState<string | null>(null);
-  const [notes, setNotes] = useState<string[]>([]);
-  const [undo, setUndo] = useState<string[] | null>(null);
-  const speech = useSpeech((alts) => {
-    const res = namesFromVoice(alts, names.filter((n) => n.trim()));
-    if (!res.ok) return setProblem(failText(res));
-    setProblem(null);
-    setNotes(res.warnings);
-    if (!res.names.length) return; // just «готово»
-    setUndo(names);
-    setNames(fillNames(names, res.names));
-  });
+  const voice = useVoice(names, setNames, applyNames);
+  const title = edit ? t.menuEditPlayers : t.newGame;
 
   return (
     <>
-      <AppBar title={edit ? t.menuEditPlayers : t.newGame} icon={edit ? 'close' : 'back'} onIcon={onBack} />
+      <AppBar title={title} icon={edit ? 'close' : 'back'} onIcon={onBack} live={edit ? null : voiceLive(voice, title)}>
+        {!edit && <VoiceButtons voice={voice} />}
+      </AppBar>
       <main className={edit ? 'screen players-edit' : 'screen'}>
         <h2 className="section-title">{t.players}</h2>
         <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis, restrictToParentElement]} onDragEnd={onDragEnd}>
@@ -100,12 +92,11 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
           return (
             <Row key={ids[i]} id={ids[i]!} sortable={edit} label={`${t.drag}: ${i + 1}`}>
               <input
-                className={speech.listening && i === target ? 'name-field voice-target' : 'name-field'}
+                className={marked(voice, `name:${i}`, voice.listening && i === target ? 'name-field voice-target' : 'name-field')}
                 value={name}
                 placeholder={t.enterName}
                 aria-label={`${t.enterName} ${i + 1}`}
                 onChange={(e) => {
-                  setUndo(null);
                   setNames(setAt(names, i, e.target.value));
                   setOpen(i);
                 }}
@@ -166,21 +157,6 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
         <Button disabled={!namesValid(names)} onClick={() => onSubmit(names, edit ? inGame : names.map(() => true), dealer, edit ? order : names.map((_, i) => i))}>
           {edit ? t.savePlayers : t.newGame}
         </Button>
-        {!edit && (
-          <VoiceBox
-            speech={speech}
-            chips={null}
-            problem={problem}
-            notes={notes}
-            onUndo={
-              undo &&
-              (() => {
-                setNames(undo);
-                setUndo(null);
-              })
-            }
-          />
-        )}
       </main>
     </>
   );

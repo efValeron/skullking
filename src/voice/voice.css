@@ -1,19 +1,30 @@
 /* Hallmark · theme: Hum · genre: playful · shape: app screen · stamp in src/app.css
  * built: the project · redesign: restyle · v2.0.0 */
-/* Voice input block. No equivalent in the original: an outline button, wine while listening; the draft as tags. */
-.voice { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 12px; }
-/* Secondary look so it doesn't compete with the screen's main action; filled while listening. */
-.btn.btn-voice { gap: 8px; background: transparent; color: var(--primary); border-color: var(--primary); }
-.btn.btn-voice:not(:disabled):active { background: var(--pressed); }
-.btn.btn-voice:disabled { color: var(--disabled-text); border-color: var(--color-edge); cursor: not-allowed; }
-.btn.btn-voice.listening { background: var(--primary); color: var(--on-primary); border-color: var(--color-ink-2); }
-.btn.btn-voice.listening:not(:disabled):active { background: var(--color-accent-deep); }
-.voice-interim { font-style: italic; color: var(--color-muted); text-align: center; }
-.voice-draft { width: 100%; display: flex; flex-direction: column; gap: 12px; }
-.voice-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.voice-chips li { padding: 4px 12px; border: 1px solid var(--field); border-radius: var(--radius-input); }
-.voice-note { font-size: var(--text-sm); color: var(--color-muted); }
-.voice-actions { display: flex; justify-content: center; gap: 12px; }
-.voice-problem { padding: 8px 12px; border-radius: var(--radius-input); background: var(--error); color: var(--on-error); text-align: center; }
+/* Voice input in the app bar. No equivalent in the original: an outline mic, wine while listening;
+ * what it hears replaces the title; fields set by voice wear the changed-cell honey. */
+.voice-live { flex: 1; min-width: 0; margin-left: 32px; }
+.appbar-plain .voice-live { margin-left: 0; }
+.voice-line, .voice-note { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.voice-line { font-size: 22px; line-height: 28px; }
+/* Live text: the newest words stay in view, the start is cut with an ellipsis on the left. */
+.voice-line.on { font-size: 16px; line-height: 20px; direction: rtl; text-align: left; }
+.voice-note { font-size: var(--text-sm); line-height: 18px; color: var(--color-muted); }
+.voice-note.error { color: var(--color-error); }
+
+.appbar-end { display: flex; flex: none; align-items: center; gap: 4px; margin-left: auto; padding-left: 8px; }
+.appbar-btn { position: relative; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 1px solid transparent; border-radius: 50%; background: none; color: var(--text); }
+.appbar-btn:active { background: var(--pressed); }
+.appbar-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.appbar-btn:disabled { color: var(--disabled-text); border-color: var(--color-edge); cursor: not-allowed; }
+.appbar-btn.mic { border-color: var(--primary); color: var(--primary); }
+.appbar-btn.mic.on { background: var(--primary); color: var(--on-primary); }
+.appbar-btn.mic.on:active { background: var(--color-accent-deep); }
+/* Listening: a ring breathes out of the mic. */
+.appbar-btn.mic.on::after { content: ''; position: absolute; inset: -4px; border: 2px solid var(--primary); border-radius: 50%; opacity: 0; animation: voice-ring 1.4s ease-out infinite; }
+@keyframes voice-ring { from { opacity: 0.7; transform: scale(0.9); } to { opacity: 0; transform: scale(1.25); } }
+@media (prefers-reduced-motion: reduce) { .appbar-btn.mic.on::after { animation: none; opacity: 0.7; transform: none; } }
+
+/* Set by voice since the last manual edit; the halo keeps the layout still. */
+.stepper-value.voice-mark, .checkbox.voice-mark, .name-field.voice-mark { background: var(--changed); box-shadow: 0 0 0 4px var(--changed); border-radius: var(--radius-input); }
+.name-field.voice-mark { box-shadow: none; } /* a wide field: the fill is enough */
 .name-field.voice-target { outline: 2px solid var(--now); outline-offset: 2px; }
-.btn.btn-voice:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
