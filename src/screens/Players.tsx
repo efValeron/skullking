@@ -92,7 +92,6 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
       <AppBar title={edit ? t.menuEditPlayers : t.newGame} icon={edit ? 'close' : 'back'} onIcon={onBack} />
       <main className={edit ? 'screen players-edit' : 'screen'}>
         <h2 className="section-title">{t.players}</h2>
-        {!edit && <p className="dealer-hint">{t.dealerHint}</p>}
         <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis, restrictToParentElement]} onDragEnd={onDragEnd}>
           <SortableContext items={ids} strategy={verticalListSortingStrategy}>
             <div className="player-list">
