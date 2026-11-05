@@ -187,4 +187,10 @@ export const suggestNames = (history: string[], text: string): string[] => {
   return q ? history.filter((n) => n.toLowerCase().includes(q)) : [];
 };
 
-export const namesValid = (names: string[]): boolean => names.length > 0 && names.every((n) => n.trim() !== '');
+const nameKey = (n: string): string => n.trim().toLowerCase().replace(/ё/g, 'е');
+/** Rows whose name another row already has (case, spaces and ё don't matter). Not allowed, unlike the original. */
+export function duplicateNames(names: string[]): Set<number> {
+  const keys = names.map(nameKey);
+  return new Set(keys.flatMap((k, i) => (k && keys.indexOf(k) !== keys.lastIndexOf(k) ? [i] : [])));
+}
+export const namesValid = (names: string[]): boolean => names.length > 0 && names.every((n) => n.trim() !== '') && duplicateNames(names).size === 0;

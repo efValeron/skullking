@@ -187,5 +187,38 @@ describe('web speech engine adapter', () => {
     last!.onend?.();
     expect(ended).toBe(3);
   });
+  it('continuous: each final result once; Android repeats dropped or cut', () => {
+    let rec: { onresult: ((e: unknown) => void) | null } = { onresult: null };
+    class Rec3 {
+      lang = '';
+      interimResults = false;
+      maxAlternatives = 1;
+      continuous = false;
+      onresult: ((e: unknown) => void) | null = null;
+      onerror = null;
+      onend = null;
+      start() {
+        rec = this;
+      }
+      stop() {}
+    }
+    const e = createWebSpeechEngine('ru-RU', Rec3 as unknown as RecCtor)!;
+    const got: string[][] = [];
+    const interim: string[] = [];
+    e.onResult = (a) => got.push(a);
+    e.onInterim = (s) => interim.push(s);
+    e.start();
+    const res = (text: string, isFinal: boolean) => Object.assign([{ transcript: text }], { isFinal });
+    const send = (resultIndex: number, ...results: ReturnType<typeof res>[]) => rec.onresult?.({ resultIndex, results });
+    const a = res('Аня два', true);
+    send(0, a);
+    send(0, a); // the same result again
+    send(1, a, res('Аня два', true)); // Android: the phrase once more
+    send(2, a, a, res('Аня два Дима', false)); // Android: interim with the old phrase in front
+    send(2, a, a, res('Аня два Дима один', true)); // and the final, too
+    expect(got).toEqual([['Аня два'], ['Дима один']]);
+    expect(interim).toEqual(['Дима']);
+    expect((rec as unknown as Rec3).continuous).toBe(true);
+  });
   it('no engine without browser support', () => expect(createWebSpeechEngine('ru-RU', undefined)).toBe(null));
 });

@@ -11,6 +11,7 @@ import {
   isGameFinished,
   lastRound,
   mergeNames,
+  duplicateNames,
   namesValid,
   nextRound,
   normalizeFinished,
@@ -161,9 +162,11 @@ describe('dealer', () => {
 describe('names', () => {
   it('history keeps first-seen order, no duplicates or blanks', () => expect(mergeNames(['Аня'], ['Дима', ' Аня ', ''])).toEqual(['Аня', 'Дима']));
   it('suggestions: case-insensitive substring', () => expect(suggestNames(['Аня', 'Дима', 'Оля'], 'Я')).toEqual(['Аня', 'Оля']));
-  it('valid: at least one, no empty names; duplicates allowed', () => {
+  it('valid: at least one, no empty names, no duplicates (by request, unlike the original)', () => {
     expect(namesValid([])).toBe(false);
     expect(namesValid(['a', ' '])).toBe(false);
-    expect(namesValid(['a', 'a'])).toBe(true);
+    expect(namesValid(['Женя', 'Жека', 'Валера', 'Валерон'])).toBe(true);
+    expect(namesValid(['Женя', 'Дима', ' женя '])).toBe(false);
+    expect([...duplicateNames(['Женя', 'Дима', ' женя ', 'Алёна', 'Алена', ''])]).toEqual([0, 2, 3, 4]);
   });
 });

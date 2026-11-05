@@ -39,9 +39,13 @@ export const speechCtor = (): RecCtor | undefined => {
 /** Errors that end listening; 'no-speech' (silence) and 'aborted' just restart. */
 const FATAL = new Set(['not-allowed', 'service-not-allowed', 'audio-capture', 'network', 'language-not-supported']);
 
+const normWords = (s: string): string[] => s.trim().split(/\s+/).map((w) => w.toLowerCase().replace(/ё/g, 'е').replace(/[^\p{L}\p{N}-]/gu, ''));
+
 /**
- * Web Speech API engine. The browser stops after every pause, so the engine restarts it until stop():
- * one phrase per browser session (continuous mode repeats earlier text on Android Chrome).
+ * Web Speech API engine in continuous mode: short pauses don't stop the browser (on Android every
+ * restart beeps). When it stops by itself (long silence), the engine restarts it until stop().
+ * Android Chrome may send a phrase twice, or again with the next words appended: an exact repeat
+ * of the previous phrase is dropped, a repeated start is cut off.
  */
 export function createWebSpeechEngine(lang = 'ru-RU', Ctor = speechCtor()): SpeechEngine | null {
   if (!Ctor) return null;
@@ -49,21 +53,31 @@ export function createWebSpeechEngine(lang = 'ru-RU', Ctor = speechCtor()): Spee
   rec.lang = lang;
   rec.interimResults = true;
   rec.maxAlternatives = 5; // several hypotheses: the first one that fits the grammar wins
-  rec.continuous = false;
+  rec.continuous = true;
   let on = false;
   let started = 0;
   let heard = false;
   let quick = 0; // sessions in a row that ended at once with nothing heard: the browser refuses, give up
+  let done = new Set<number>(); // final results of this browser session already passed on
+  let last: string[] = []; // words of the previous phrase
   const begin = () => {
     started = Date.now();
     heard = false;
+    done = new Set();
     rec.start();
+  };
+  /** The text after a repeat of the previous phrase; '' when it is that phrase again. */
+  const cut = (a: string): string => {
+    const w = normWords(a);
+    const repeats = last.length > 0 && w.length >= last.length && last.every((x, k) => w[k] === x);
+    return (repeats ? a.trim().split(/\s+/).slice(last.length).join(' ') : a).trim();
   };
   const engine: SpeechEngine = {
     start: () => {
       if (on) return;
       on = true;
       quick = 0;
+      last = [];
       try {
         begin();
       } catch (e) {
@@ -78,11 +92,23 @@ export function createWebSpeechEngine(lang = 'ru-RU', Ctor = speechCtor()): Spee
   };
   rec.onresult = (e) => {
     heard = true;
+    const interim: string[] = [];
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const r = e.results[i]!;
-      if (r.isFinal) engine.onResult?.(Array.from(r, (a) => a.transcript));
-      else engine.onInterim?.(r[0]?.transcript ?? '');
+      if (!r.isFinal) {
+        interim.push(r[0]?.transcript.trim() ?? '');
+        continue;
+      }
+      if (done.has(i)) continue;
+      done.add(i);
+      const alts = Array.from(r, (a) => a.transcript);
+      if (!cut(alts[0] ?? '')) continue; // the previous phrase again
+      const rest = alts.map(cut).filter(Boolean);
+      last = normWords(alts[0]!);
+      engine.onResult?.(rest);
     }
+    const text = cut(interim.filter(Boolean).join(' '));
+    if (text) engine.onInterim?.(text);
   };
   rec.onerror = (e) => {
     if (!FATAL.has(e.error)) return;

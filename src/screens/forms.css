@@ -23,6 +23,7 @@
 .player-list:not(:empty) { margin-bottom: 8px; } /* on the list itself: dnd-kit puts hidden a11y nodes between it and «+» */
 .name-field { flex: 1; min-width: 0; height: 56px; padding: 0 12px; border: 1px solid var(--field); border-radius: var(--radius-input); background: none; font-size: var(--text-md); letter-spacing: 0.5px; caret-color: var(--primary); }
 .name-field::placeholder { color: var(--placeholder); opacity: 1; }
+.name-field.name-dup { border-color: var(--color-error); box-shadow: inset 0 0 0 1px var(--color-error); } /* same name twice; not in the original */
 .name-field:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; } /* the original's wine edge over the border */
 .player-row .circle-sm { margin-left: 8px; }
 .player-row .name-field + .circle-sm { margin-left: 12px; }

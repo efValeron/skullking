@@ -7,12 +7,14 @@ const URL_ = process.argv[2] ?? 'http://localhost:5173/';
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ ...devices['Pixel 7'], viewport: { width: 390, height: 844 }, locale: 'ru-RU' });
 await ctx.addInitScript(() => {
-  // Queue items: { alts, final } — a result; 'END' — the browser stops by itself after a pause.
+  // Queue items: { alts, final } — a result; 'END' — the browser stops by itself after a long silence.
+  // Continuous mode as in Chrome: results pile up in one list, an interim result is replaced by its final.
   window.__say = [];
   window.__starts = 0;
   class FakeRec {
     start() {
       window.__starts++;
+      const results = [];
       this.t = setInterval(() => {
         const x = window.__say.shift();
         if (!x) return;
@@ -21,7 +23,9 @@ await ctx.addInitScript(() => {
           return this.onend?.();
         }
         const res = Object.assign(x.alts.map((transcript) => ({ transcript })), { isFinal: x.final });
-        this.onresult?.({ resultIndex: 0, results: [res] });
+        const i = results.length && !results[results.length - 1].isFinal ? results.length - 1 : results.length;
+        results[i] = res;
+        this.onresult?.({ resultIndex: i, results: [...results] });
       }, 15);
     }
     stop() {
@@ -70,12 +74,22 @@ assert.deepEqual(await fields(), ['', '']);
 ok('names live into the fields, noise rejected, undo');
 
 await say('Аня');
+await say('Дима');
 await say('Аня');
 assert.equal(await text('такое имя уже есть').count(), 1);
-await say('Дима Оля готово');
+await say('Оля готово');
 assert.deepEqual(await fields(), ['Аня', 'Дима', 'Оля']);
 assert.equal(await listening(), false, 'stop word ends listening');
 ok('duplicate rejected, «готово» stops the mic');
+
+// Typed by hand: the same name twice keeps «Новая игра» off and marks both fields.
+await btn('Добавить игрока').click();
+await page.getByLabel('Введите имя 4').fill(' аня');
+assert.equal(await btn('Новая игра').isDisabled(), true);
+assert.equal(await page.locator('input.name-field[aria-invalid="true"]').count(), 2);
+await btn('Удалить игрока 4').click();
+assert.equal(await btn('Новая игра').isEnabled(), true);
+ok('same name twice by hand blocks the game');
 
 await btn('Новая игра').click();
 await btn('Начать игру').click(); // 10 rounds, round 1 = 1 card

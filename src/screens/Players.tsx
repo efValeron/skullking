@@ -3,7 +3,7 @@ import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, us
 import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { dealerAfterRemove, namesValid, suggestNames } from '../game/model';
+import { dealerAfterRemove, duplicateNames, namesValid, suggestNames } from '../game/model';
 import { t } from '../i18n';
 import { AppBar, Button, Checkbox, Icon } from '../ui';
 import { applyNames } from '../voice/drafts';
@@ -76,6 +76,8 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
   const target = names.findIndex((n) => !n.trim());
   const voice = useVoice(names, setNames, applyNames);
   const title = edit ? t.menuEditPlayers : t.newGame;
+  /** Same name twice: red fields, «Новая игра» / «Сохранить» stay off. */
+  const dups = duplicateNames(names);
 
   return (
     <>
@@ -92,7 +94,8 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
           return (
             <Row key={ids[i]} id={ids[i]!} sortable={edit} label={`${t.drag}: ${i + 1}`}>
               <input
-                className={marked(voice, `name:${i}`, voice.listening && i === target ? 'name-field voice-target' : 'name-field')}
+                className={marked(voice, `name:${i}`, ['name-field', voice.listening && i === target && 'voice-target', dups.has(i) && 'name-dup'].filter(Boolean).join(' '))}
+                aria-invalid={dups.has(i) || undefined}
                 value={name}
                 placeholder={t.enterName}
                 aria-label={`${t.enterName} ${i + 1}`}
