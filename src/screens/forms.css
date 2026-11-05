@@ -77,5 +77,6 @@
 
 /* Dealer: pick on the players screen, mark next to the name on bids and round. Not in the original. */
 .dealer-hint { margin: -4px 0 8px; color: var(--placeholder); }
-.circle.dealer-pick:not(.on) { background: transparent; color: var(--field); border-color: var(--field); }
+.circle.dealer-pick:not(.on), .circle.quiet { background: transparent; color: var(--field); border-color: var(--field); }
+.circle.quiet:disabled { background: var(--disabled-bg); color: var(--disabled-text); border-color: var(--disabled-text); cursor: not-allowed; }
 .dealer-mark { display: inline-flex; vertical-align: -3px; margin-left: 8px; color: var(--primary); }

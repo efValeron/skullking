@@ -19,15 +19,23 @@ export interface PlayersProps {
   /** «←» in create, «✕» in edit. */
   onBack: () => void;
   /** Create: names + first dealer (button «Новая игра»). Edit: names + in-game flags (button «Сохранить»). */
-  onSubmit: (names: string[], inGame: boolean[], dealer: number) => void;
+  onSubmit: (names: string[], inGame: boolean[], dealer: number, order: number[]) => void;
 }
 
 const setAt = <T,>(arr: T[], i: number, v: T): T[] => arr.map((x, j) => (j === i ? v : x));
+const swap = <T,>(arr: T[], i: number, j: number): T[] => arr.map((x, k) => (k === i ? arr[j]! : k === j ? arr[i]! : x));
 
 export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame, dealer: initialDealer = 0, history, onBack, onSubmit }: PlayersProps) {
   const edit = mode === 'edit';
   const [names, setNames] = useState(initialNames);
-  const [inGame, setInGame] = useState(initialInGame ?? []);
+  const [inGame, setInGame] = useState(() => initialNames.map((_, i) => initialInGame?.[i] ?? true));
+  /** Edit: order[i] = original index of the player now in row i. */
+  const [order, setOrder] = useState(() => initialNames.map((_, i) => i));
+  const move = (i: number, j: number) => {
+    setNames(swap(names, i, j));
+    setInGame(swap(inGame, i, j));
+    setOrder(swap(order, i, j));
+  };
   const [dealer, setDealer] = useState(initialDealer);
   /** Row whose autocomplete list is open. */
   const [open, setOpen] = useState<number | null>(null);
@@ -72,7 +80,15 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
                 onBlur={() => setOpen(null)}
               />
               {edit ? (
-                <Checkbox hideLabel label={`${t.inGame}: ${i + 1}`} checked={inGame[i] ?? true} onChange={(v) => setInGame(setAt(inGame, i, v))} />
+                <>
+                  <button className="circle circle-sm quiet" aria-label={`${t.moveUp}: ${i + 1}`} disabled={i === 0} onClick={() => move(i, i - 1)}>
+                    <Icon name="up" size={20} />
+                  </button>
+                  <button className="circle circle-sm quiet" aria-label={`${t.moveDown}: ${i + 1}`} disabled={i === names.length - 1} onClick={() => move(i, i + 1)}>
+                    <Icon name="down" size={20} />
+                  </button>
+                  <Checkbox hideLabel label={`${t.inGame}: ${i + 1}`} checked={inGame[i] ?? true} onChange={(v) => setInGame(setAt(inGame, i, v))} />
+                </>
               ) : (
                 <>
                   <button
@@ -119,7 +135,7 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
         <button className="btn add-bar" aria-label={t.add} disabled={edit} onClick={() => setNames([...names, ''])}>
           +
         </button>
-        <Button disabled={!namesValid(names)} onClick={() => onSubmit(names, edit ? names.map((_, i) => inGame[i] ?? true) : names.map(() => true), dealer)}>
+        <Button disabled={!namesValid(names)} onClick={() => onSubmit(names, edit ? inGame : names.map(() => true), dealer, edit ? order : names.map((_, i) => i))}>
           {edit ? t.savePlayers : t.newGame}
         </Button>
         {!edit && (

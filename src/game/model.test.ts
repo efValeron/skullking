@@ -140,6 +140,17 @@ describe('dealer', () => {
     g = rounds(g, 1); // round 3: after c comes a
     expect(dealerOf(g)).toBe(0);
   });
+  it('reorder: scores move with players, current dealer stays, next round goes to the new neighbour', () => {
+    let g = createGame(['a', 'b', 'c'], opts, new Date(), 0);
+    g = updateLast(g, (r) => normalizeFinished({ ...r, bidsFixed: true, players: [p(1, 1), p(0, 0), p(0, 1)] })); // round 1: a deals
+    g = nextRound(g); // round 2: b deals
+    g = applyPlayers(g, ['c', 'b', 'a'], [true, true, true], [2, 1, 0]);
+    expect(g.playerNames).toEqual(['c', 'b', 'a']);
+    expect(runningTotals(g.rounds, 3)[0]).toEqual([-10, 10, 20]); // c, b, a
+    expect(dealerOf(g)).toBe(1); // still b
+    expect(dealerOf(g, 0)).toBe(2); // round 1 was a's
+    expect(dealerOf(nextRound(updateLast(g, (r) => ({ ...r, finished: true }))))).toBe(2); // after b now sits a (it was c)
+  });
   it('choice follows its player when rows are removed', () => {
     expect(dealerAfterRemove(2, 0)).toBe(1);
     expect(dealerAfterRemove(2, 2)).toBe(0);

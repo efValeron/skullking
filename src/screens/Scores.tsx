@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   canFinish,
   cardsFor,
@@ -12,6 +12,7 @@ import {
   type Round,
 } from '../game/model';
 import { t } from '../i18n';
+import { sharePng } from '../share';
 import { AppBar, Button, Card, Checkbox, Sheet, Stepper } from '../ui';
 import './scores.css';
 
@@ -49,6 +50,9 @@ export function ScoresScreen(props: ScoresProps) {
     setDraft(null);
   };
   const sheetRound = draft && working[draft.k]!;
+  const tableRef = useRef<HTMLTableElement>(null);
+  // End of game (or its results from the start list): the table can go out as a picture.
+  const shareable = (props.mode === 'finish' && isGameFinished(game)) || props.mode === 'results';
   const narrow = game.playerNames.length > 4; // «№» header and a 25px first column, as in the original
 
   return (
@@ -75,7 +79,7 @@ export function ScoresScreen(props: ScoresProps) {
           </Card>
         )}
 
-        <table className={narrow ? 'scores narrow' : 'scores'}>
+        <table ref={tableRef} className={narrow ? 'scores narrow' : 'scores'}>
           <thead>
             <tr>
               <th scope="col">{narrow ? t.numberColumn : t.round}</th>
@@ -141,6 +145,11 @@ export function ScoresScreen(props: ScoresProps) {
           ) : (
             <Button onClick={props.onNextRound}>{t.nextRound}</Button>
           ))}
+        {shareable && (
+          <Button outline onClick={() => tableRef.current && sharePng(tableRef.current, `skull-king-${game.startDate.slice(0, 10)}.png`)}>
+            {t.share}
+          </Button>
+        )}
         {props.mode === 'edit' && (
           <Button disabled={invalid.length > 0} onClick={() => props.onSave(working.map((r) => (r.finished ? normalizeFinished(r) : r)))}>
             {t.saveScore}

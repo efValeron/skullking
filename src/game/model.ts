@@ -15,6 +15,8 @@ export interface Round {
   bidsFixed: boolean;
   finished: boolean;
   cardsInRound: number;
+  /** Dealer (player index), stored once players are reordered; otherwise computed by dealerOf. Not in the original. */
+  dealer?: number;
 }
 export interface Game {
   playerNames: string[];
@@ -77,16 +79,14 @@ export function createGame(playerNames: string[], o: Options, now = new Date(), 
  */
 export function dealerOf(g: Game, roundIndex = g.rounds.length - 1): number {
   const n = g.playerNames.length;
-  let d = Math.min(Math.max(g.firstDealer ?? 0, 0), Math.max(n - 1, 0));
-  for (let k = 1; k <= roundIndex; k++) {
-    const away = g.rounds[k]?.players.map((p) => p.away) ?? [];
-    for (let s = 1; s <= n; s++) {
-      const c = (d + s) % n;
-      if (!away[c]) {
-        d = c;
-        break;
-      }
-    }
+  if (!n) return 0;
+  let d = Math.min(Math.max(g.firstDealer ?? 0, 0), n - 1);
+  for (let k = 0; k <= roundIndex; k++) {
+    const r = g.rounds[k];
+    const away = r?.players.map((p) => p.away) ?? [];
+    let c = r?.dealer ?? (k === 0 ? d : d + 1); // stored after a reorder, else the next player
+    for (let s = 0; s < n && away[c % n]; s++) c++;
+    d = c % n;
   }
   return d;
 }
@@ -160,8 +160,19 @@ export const effectiveMaxCards = (players: number, totalRounds: number, limit: n
 export const applyOptions = (g: Game, o: Pick<Options, 'totalRounds' | 'maxCards'>): Game => ({ ...g, ...o });
 
 /** Edit players: rename and set «в игре» on the current (last) round, like the original. */
-export const applyPlayers = (g: Game, names: string[], inGame: boolean[]): Game =>
-  updateLast({ ...g, playerNames: names }, (r) => ({ ...r, players: r.players.map((p, i) => ({ ...p, away: !(inGame[i] ?? true) })) }));
+/**
+ * Edit players: rename, reorder (`order[i]` = old index of the player now at i) and set «в игре» on the
+ * current round, like the original. Scores move with their players; each round keeps its dealer, so the
+ * next round goes to whoever now sits after the current dealer.
+ */
+export function applyPlayers(g: Game, names: string[], inGame: boolean[], order = names.map((_, i) => i)): Game {
+  const at = (old: number) => order.indexOf(old);
+  const rounds = g.rounds.map((r, k) => ({ ...r, dealer: at(dealerOf(g, k)), players: order.map((o) => r.players[o]!) }));
+  return updateLast({ ...g, playerNames: names, rounds, firstDealer: at(g.firstDealer ?? 0) }, (r) => ({
+    ...r,
+    players: r.players.map((p, i) => ({ ...p, away: !(inGame[i] ?? true) })),
+  }));
+}
 
 // ---------- names ----------
 

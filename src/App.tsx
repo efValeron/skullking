@@ -118,9 +118,9 @@ export function App() {
               inGame={lastRound(game).players.map((p) => !p.away)}
               history={names}
               onBack={back}
-              onSubmit={(raw, inGame) => {
+              onSubmit={(raw, inGame, _dealer, order) => {
                 const n = raw.map((s) => s.trim());
-                update((g) => applyPlayers(g, n, inGame));
+                update((g) => applyPlayers(g, n, inGame, order));
                 setNames((h) => mergeNames(h, n));
                 back();
               }}
@@ -197,6 +197,8 @@ export function App() {
         if (!r.bidsFixed)
           return (
             <BidsScreen
+              // shortcut: unsaved bids reset after renaming/reordering players mid-bidding (they're indexed by row)
+              key={game.playerNames.join('\n')}
               mode="before"
               game={game}
               onMenu={menu}

@@ -2,6 +2,8 @@
 // and checks the running totals. Usage: node clone-e2e.mjs [url]   (default http://localhost:5173/)
 import { chromium, devices } from 'playwright';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { PNG } from 'pngjs';
 
 const URL = process.argv[2] ?? 'http://localhost:5173/';
 const browser = await chromium.launch();
@@ -101,6 +103,23 @@ await btn('Завершить раунд').click();
 await expectTotals(4, [80, 70, 40]); // the original shows «-» for Оля here (deliberate fix)
 assert.equal(await btn('Начать новую игру').count(), 1, 'finished game offers a new game');
 
+// Share the final table: the share sheet when the phone can share files, else a PNG download
+await page.evaluate(() => {
+  navigator.canShare = () => true;
+  navigator.share = async (d) => { window.__shared = { name: d.files[0].name, type: d.files[0].type, size: d.files[0].size }; };
+});
+await btn('Поделиться таблицей').click();
+await page.waitForFunction(() => window.__shared);
+const shared = await page.evaluate(() => window.__shared);
+assert.match(shared.name, /^skull-king-\d{4}-\d{2}-\d{2}\.png$/);
+assert.equal(shared.type, 'image/png');
+assert.ok(shared.size > 10_000, 'non-trivial picture');
+await page.evaluate(() => { navigator.canShare = undefined; });
+const [download] = await Promise.all([page.waitForEvent('download'), btn('Поделиться таблицей').click()]);
+const png = PNG.sync.read(readFileSync(await download.path()));
+assert.equal(png.width, 780, 'table at 2x of 390px');
+console.log(`ok  share table: ${shared.size} bytes via share sheet; download ${png.width}x${png.height}`);
+
 // Edit round 2: Аня 2/0, Дима 1/2
 await menu();
 await btn('Редактировать очки за раунды').click();
@@ -149,10 +168,21 @@ await page.goBack(); // Back on a root screen does nothing
 assert.equal(await page.getByRole('heading', { name: 'Ставки для раунда 9' }).count(), 1, 'Back on root stays');
 console.log('ok  Back on root screen stays');
 
+// Reorder in «Редактировать игроков»: Дима moves up; Аня still deals now, next round goes to her new neighbour Оля
+await menu();
+await btn('Редактировать игроков').click();
+await btn('Выше: 2').click();
+await btn('Сохранить').click();
+assert.equal(await page.locator('.player-name:visible').first().innerText(), 'Дима', 'new order on bids');
+assert.equal(await dealer(), 'Аня', 'current dealer stays after reorder');
+console.log('ok  reorder players');
+
 await btn('Начать раунд').click();
 await plus('Аня: Взято', 9);
 await btn('Завершить раунд').click();
 await btn('Следующий раунд').click();
+assert.equal(await dealer(), 'Оля', 'next dealer follows the new order');
+console.log('ok  dealer passes in the new order');
 await btn('Начать раунд').click();
 await plus('Дима: Взято', 10);
 await btn('Завершить раунд').click();
