@@ -20,6 +20,13 @@ const plus = async (g, n = 1) => { for (let i = 0; i < n; i++) await group(g).ge
 const minus = async (g, n = 1) => { for (let i = 0; i < n; i++) await group(g).getByRole('button', { name: '-' }).click(); };
 const menu = () => btn('Открыть меню навигации').click();
 const dealer = () => page.locator('.player-name:has(.dealer-mark):visible').innerText();
+/** Gap between the last player field and the «+» bar (must stay 8px). */
+const gapToPlus = () =>
+  page.evaluate(() => {
+    const rows = [...document.querySelectorAll('.player-row')].filter((r) => r.offsetParent);
+    const plus = [...document.querySelectorAll('.add-bar')].find((b) => b.offsetParent);
+    return Math.round(plus.getBoundingClientRect().top - rows.at(-1).getBoundingClientRect().bottom);
+  });
 /** Drag a player row by its handle onto another row (edit players). */
 async function drag(from, to) {
   const a = await btn(`Перетащить: ${from}`).boundingBox();
@@ -41,6 +48,7 @@ await btn('Начать новую игру').click();
 await btn('Добавить игрока').click();
 for (const [i, n] of ['Аня', 'Дима', 'Оля'].entries()) await page.getByLabel(`Введите имя ${i + 1}`).fill(n);
 await btn('Раздаёт: 3').click(); // Оля deals first
+assert.equal(await gapToPlus(), 8, 'gap before «+» (new game)');
 await btn('Новая игра').click();
 await minus('Раунды', 6);
 await btn('Начать игру').click();
@@ -181,6 +189,7 @@ console.log('ok  Back on root screen stays');
 // Reorder in «Редактировать игроков»: Дима moves up; Аня still deals now, next round goes to her new neighbour Оля
 await menu();
 await btn('Редактировать игроков').click();
+assert.equal(await gapToPlus(), 8, 'gap before «+» (edit players)');
 await drag(2, 1); // Дима's handle onto Аня's row
 await btn('Сохранить').click();
 assert.equal(await page.locator('.player-name:visible').first().innerText(), 'Дима', 'new order on bids');
