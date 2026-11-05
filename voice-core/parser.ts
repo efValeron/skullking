@@ -42,6 +42,8 @@ export interface Ok<T> {
   draft: T;
   warnings: string[];
   heard: string;
+  /** Слова, которые нестрогий разбор пропустил (ставки и итоги). */
+  unknown?: string[];
 }
 export interface Fail {
   ok: false;
@@ -276,65 +278,133 @@ export function parseName(
   });
 }
 
-// ---------- окно «ставки» ----------
+// ---------- окна «ставки» и «итоги»: нестрогий разбор ----------
+//
+// Диктовка за столом нечёткая: «Так, Валера взял один, бонусы есть, альянс с Денисом, Денис ноль, всё».
+// Слова-связки пропускаются. Незнакомое слово не ломает фразу: оно попадает в предупреждение
+// «не понял» и сбрасывает текущего игрока, так что число относится к имени, только если между ними
+// одни связки («Дима, у тебя два туза» по-прежнему ничего не даёт). Поправка «нет / вернее» меняет
+// уже названное число. Черновик всё равно подтверждает человек.
 
-const FILL_BIDS = new Set(['и', 'у', 'ставка', 'ставки', 'ставит', 'поставил', 'поставила']);
+const COMMON_FILL = new Set(
+  'так ну вот это эм ээ эээ короче ладно давай да ага угу есть значит получается итак теперь дальше потом там тут еще тоже все а и у с со нас кем он она они я мы меня него нее ее его ему ей сам сама'.split(
+    ' ',
+  ),
+);
+const FILL_BIDS = new Set(['ставка', 'ставки', 'ставит', 'ставлю', 'поставил', 'поставила', 'заказал', 'заказала']);
+const FILL_RES = new Set(
+  'взял взяла взяли взято взятки взятка взятку взятках получил получила сделал сделала набрал набрала был была было'.split(' '),
+);
+const CORRECTION = new Set(['нет', 'вернее', 'точнее', 'ой', 'поправка']);
+
+const isBonusKeyword = (w: string): boolean => /^бонус/.test(w);
+const isFourteen = (w: string): boolean => /^четырнадцат/.test(w) || w === '14';
+const HIT = /^(побил|побила|бьет|убил|убила|забрал|забрала|съел|съела|взял|взяла)$/;
+const COUNT = mk('1:1 2:2 3:3 4:4 5:5 один:1 одного:1 одну:1 два:2 две:2 двух:2 двоих:2 три:3 трех:3 троих:3 четыре:4 четырех:4 пять:5 пяти:5');
+
+/**
+ * Бонусное событие с позиции i. Сокращения тоже: «пират пирата» = чёрный пират побил пирата (+30),
+ * «пират русалку» (+20), «русалка чёрного пирата» (+40), «пират двух пиратов» (+60).
+ * «Четырнадцать» без «чёрная» считается (+10) только в бонусной части (после «бонус», «плюс» или события).
+ */
+function readEvent(t: string[], i: number, inBonus: boolean): { pts: number; len: number } | null {
+  const at = (k: number): string => t[i + k] ?? '';
+  let k = 0;
+  const black = /^(черн|козырн)/.test(at(0));
+  if (black) k++;
+  const subj = at(k);
+  if (isFourteen(subj)) return black ? { pts: 20, len: k + 1 } : inBonus ? { pts: 10, len: 1 } : null;
+  if (black && !/^пират/.test(subj)) return null;
+  if (/^(лут|альянс)/.test(subj)) return { pts: 20, len: 1 };
+  const pirate = /^пират/.test(subj) || /^(корол|скалкинг|скулкинг)/.test(subj);
+  const mermaid = /^русалк/.test(subj);
+  if (!pirate && !mermaid) return null;
+  k++;
+  if (HIT.test(at(k))) k++;
+  if (mermaid) {
+    if (/^черн/.test(at(k))) k++;
+    return /^(пират|корол|скалкинг|скулкинг)/.test(at(k)) ? { pts: 40, len: k + 1 } : null;
+  }
+  const n = COUNT.get(at(k));
+  if (n !== undefined) k++;
+  const times = n ?? 1;
+  if (/^русалк/.test(at(k))) return black ? null : { pts: 20 * times, len: k + 1 }; // чёрного пирата бьёт русалка, а не наоборот
+  if (/^пират/.test(at(k))) return { pts: 30 * times, len: k + 1 };
+  return null;
+}
+
+/** Первый вариант распознавания, понятый целиком; если такого нет, первый понятый с пропусками. */
+function bestOf<T>(alts: string[], one: (text: string) => Parsed<T>): Parsed<T> {
+  const list = alts.filter((a) => a && a.trim());
+  if (!list.length) return fail('empty', '');
+  let partial: Parsed<T> | null = null;
+  let firstFail: Parsed<T> | null = null;
+  for (const a of list) {
+    const r = one(a);
+    if (r.ok && !r.unknown?.length) return r;
+    if (r.ok) partial ??= r;
+    else firstFail ??= r;
+  }
+  return (partial ?? firstFail) as Parsed<T>;
+}
+
+const unknownNote = (words: string[]): string => `Не понял и пропустил: «${words.join(' ')}»`;
+const nothing = (text: string, unknown: string[]): Fail =>
+  unknown.length ? fail('unknown_word', text, unknown[0]) : fail('no_pairs', text);
 
 function parseBidsOne(text: string, idx: Index, ctx: { cards: number }): Parsed<BidsDraft> {
   const t = tok(text);
   if (!t.length) return fail('empty', text);
   const bids = new Map<string, number>();
-  const warnings: string[] = [];
+  const named: string[] = [];
+  const unknown: string[] = [];
+  let cur: string | null = null;
+  let fix = false;
   let i = 0;
   while (i < t.length) {
     const w = t[i] as string;
-    if (FILL_BIDS.has(w)) {
+    if (COMMON_FILL.has(w) || FILL_BIDS.has(w)) {
+      i++;
+      continue;
+    }
+    if (CORRECTION.has(w)) {
+      fix = true;
       i++;
       continue;
     }
     const names = matchName(w, idx);
     if (names.length > 1) return fail('ambiguous_name', text, w);
-    if (names.length === 0) return fail('unknown_word', text, w);
-    const name = names[0] as string;
-    let j = i + 1;
-    while (j < t.length && FILL_BIDS.has(t[j] as string)) j++;
-    const num = readNumber(t, j);
-    if (!num) {
-      warnings.push(`${name}: нет числа, пропущено`);
+    if (names.length === 1) {
+      cur = names[0] as string;
+      named.push(cur);
+      fix = false;
       i++;
       continue;
     }
-    if (num.value > ctx.cards) return fail('out_of_range', text, `${name} ${num.value}`);
-    const prev = bids.get(name);
-    if (prev !== undefined && prev !== num.value) return fail('conflict', text, name);
-    bids.set(name, num.value);
-    i = j + num.len;
+    const num = readNumber(t, i);
+    if (num && cur) {
+      if (num.value > ctx.cards) return fail('out_of_range', text, `${cur} ${num.value}`);
+      const prev = bids.get(cur);
+      if (prev !== undefined && prev !== num.value && !fix) return fail('conflict', text, cur);
+      bids.set(cur, num.value);
+      fix = false;
+      i += num.len;
+      continue;
+    }
+    unknown.push(w);
+    cur = null;
+    i++;
   }
-  if (!bids.size) return fail('no_pairs', text);
-  return { ok: true, draft: { bids: Object.fromEntries(bids) }, warnings, heard: text };
+  if (!bids.size) return nothing(text, unknown);
+  const warnings = named.filter((n) => !bids.has(n)).map((n) => `${n}: нет числа, пропущено`);
+  if (unknown.length) warnings.push(unknownNote(unknown));
+  return { ok: true, draft: { bids: Object.fromEntries(bids) }, warnings, heard: text, unknown };
 }
 
-/** «Аня два, Дима один»: неупомянутые игроки получат 0 в completeBids(). */
+/** «Аня два, Дима один», «так, у Ани два, Дима ноль, всё»: неупомянутые игроки получат 0 в completeBids(). */
 export function parseBids(alts: string[], players: PlayerInput[], ctx: { cards: number }): Parsed<BidsDraft> {
   const idx = buildIndex(toPlayers(players));
-  return best(alts, (text) => parseBidsOne(text, idx, ctx));
-}
-
-// ---------- окно «итоги раунда» ----------
-
-const FILL_RES = new Set(['и', 'у', 'взял', 'взяла', 'взяли', 'взято', 'взятки']);
-const isBonusKeyword = (w: string): boolean => w === 'бонус' || w === 'бонусы' || w === 'бонусов';
-
-/** Бонусные события. Слово «четырнадцать» само по себе считается только после слова «бонус». */
-function readEvent(t: string[], i: number, afterKeyword: boolean): { pts: number; len: number } | null {
-  const is = (k: number, re: RegExp): boolean => re.test(t[i + k] ?? '');
-  if (is(0, /^черн/) && is(1, /^пират/) && is(2, /^побил/) && is(3, /^пират/)) return { pts: 30, len: 4 };
-  if (is(0, /^русалк/) && is(1, /^побил/) && is(2, /^черн/) && is(3, /^пират/)) return { pts: 40, len: 4 };
-  if (is(0, /^пират/) && is(1, /^побил/) && is(2, /^русалк/)) return { pts: 20, len: 3 };
-  if (is(0, /^(черн|козырн)/) && is(1, /^четырнадцат/)) return { pts: 20, len: 2 };
-  if (is(0, /^четырнадцат/)) return afterKeyword ? { pts: 10, len: 1 } : null;
-  if (t[i] === 'лут') return { pts: 20, len: 1 };
-  return null;
+  return bestOf(alts, (text) => parseBidsOne(text, idx, ctx));
 }
 
 function parseResultsOne(text: string, idx: Index, ctx: { cards: number }): Parsed<ResultsDraft> {
@@ -343,15 +413,17 @@ function parseResultsOne(text: string, idx: Index, ctx: { cards: number }): Pars
   const tricks = new Map<string, number>();
   const bonus = new Map<string, number>();
   const seen = new Set<string>();
+  const unknown: string[] = [];
+  const addBonus = (who: string, pts: number): void => {
+    bonus.set(who, (bonus.get(who) ?? 0) + pts);
+  };
   let kraken: boolean | undefined;
   let cur: string | null = null;
+  let inBonus = false; // после «бонус», «плюс» или события число кратное 10 — это бонус
+  let fix = false;
   let i = 0;
   while (i < t.length) {
     const w = t[i] as string;
-    if (FILL_RES.has(w)) {
-      i++;
-      continue;
-    }
     if ((w === 'без' || w === 'нет') && /^кракен/.test(t[i + 1] ?? '')) {
       kraken = false;
       cur = null;
@@ -364,75 +436,89 @@ function parseResultsOne(text: string, idx: Index, ctx: { cards: number }): Pars
       i++;
       continue;
     }
+    if (COMMON_FILL.has(w) || FILL_RES.has(w)) {
+      i++;
+      continue;
+    }
+    if (CORRECTION.has(w)) {
+      fix = true;
+      i++;
+      continue;
+    }
     const names = matchName(w, idx);
     if (names.length > 1) return fail('ambiguous_name', text, w);
     if (names.length === 1) {
+      // «альянс с Денисом»: партнёр, а не следующий игрок
+      if (cur && (t[i - 1] === 'с' || t[i - 1] === 'со')) {
+        i++;
+        continue;
+      }
       cur = names[0] as string;
       seen.add(cur);
+      inBonus = false;
+      fix = false;
       i++;
       continue;
     }
-    if (isBonusKeyword(w)) {
-      if (!cur) return fail('unknown_word', text, w);
+    if (cur && (isBonusKeyword(w) || w === 'плюс')) {
+      inBonus = true;
       i++;
-      let got = 0;
-      for (;;) {
-        const ev = readEvent(t, i, true);
-        if (ev) {
-          bonus.set(cur, (bonus.get(cur) ?? 0) + ev.pts);
-          i += ev.len;
-          got++;
-          continue;
-        }
-        const n = readNumber(t, i);
-        if (n && n.len === 1 && n.value >= 10 && n.value % 10 === 0) {
-          bonus.set(cur, (bonus.get(cur) ?? 0) + n.value);
-          i++;
-          got++;
-          continue;
-        }
-        break;
-      }
-      if (!got) return fail('unknown_word', text, t[i] ?? w);
       continue;
     }
     if (cur) {
-      const ev = readEvent(t, i, false);
+      const ev = readEvent(t, i, inBonus);
       if (ev) {
-        bonus.set(cur, (bonus.get(cur) ?? 0) + ev.pts);
+        addBonus(cur, ev.pts);
+        inBonus = true;
         i += ev.len;
         continue;
       }
       const n = readNumber(t, i);
       if (n) {
-        if (n.value > ctx.cards) return fail('out_of_range', text, `${cur} ${n.value}`);
+        const v = n.value;
         const prev = tricks.get(cur);
-        if (prev !== undefined && prev !== n.value) return fail('conflict', text, cur);
-        tricks.set(cur, n.value);
+        const bonusLike = v >= 10 && v % 10 === 0;
+        if (inBonus && bonusLike) addBonus(cur, v);
+        else if (prev === undefined || prev === v || fix) {
+          if (v > ctx.cards) return fail('out_of_range', text, `${cur} ${v}`);
+          tricks.set(cur, v);
+          inBonus = false;
+          fix = false;
+        } else if (bonusLike) {
+          addBonus(cur, v); // «Валера два двадцать»: взятки уже названы
+          inBonus = true;
+        } else return fail('conflict', text, cur);
         i += n.len;
         continue;
       }
     }
-    return fail('unknown_word', text, w);
+    unknown.push(w);
+    cur = null;
+    inBonus = false;
+    i++;
   }
-  if (!tricks.size && !bonus.size && kraken === undefined) return fail('no_pairs', text);
+  // Один «кракен» среди непонятных слов — болтовня («кракен выйдет, зуб даю»), а не итог.
+  if (!tricks.size && !bonus.size && (kraken === undefined || unknown.length)) return nothing(text, unknown);
   const warnings: string[] = [];
   for (const n of seen) {
     if (!tricks.has(n) && !bonus.has(n)) warnings.push(`${n}: нет данных, пропущено`);
   }
+  if (unknown.length) warnings.push(unknownNote(unknown));
   const draft: ResultsDraft = { tricks: Object.fromEntries(tricks), bonus: Object.fromEntries(bonus) };
   if (kraken !== undefined) draft.kraken = kraken;
-  return { ok: true, draft, warnings, heard: text };
+  return { ok: true, draft, warnings, heard: text, unknown };
 }
 
 /**
- * «Кракен, Аня два, Дима один», «Оля бонус сорок», «Иван русалка побила чёрного пирата».
- * Бонусы: 14-я карта +10 (после слова «бонус»), чёрная 14-я +20, пират побил русалку +20,
- * чёрный пират побил пирата +30, русалка побила чёрного пирата +40, лут +20, «бонус <10,20,…>».
+ * «Кракен, Аня два, Дима один», «Оля бонус сорок», «Валера два, бонусы пират пирата плюс двадцать».
+ * Бонусы: 14-я карта +10 (в бонусной части), чёрная 14-я +20, пират побил русалку +20,
+ * чёрный пират побил пирата +30 (×число пиратов), русалка побила чёрного пирата +40, лут или альянс +20,
+ * число кратное 10 после «бонус», «плюс» или события. «Альянс с Денисом» даёт +20 только тому, кто говорит:
+ * засчитывать ли альянс, решают игроки сами.
  */
 export function parseResults(alts: string[], players: PlayerInput[], ctx: { cards: number }): Parsed<ResultsDraft> {
   const idx = buildIndex(toPlayers(players));
-  return best(alts, (text) => parseResultsOne(text, idx, ctx));
+  return bestOf(alts, (text) => parseResultsOne(text, idx, ctx));
 }
 
 // ---------- черновики и проверки ----------

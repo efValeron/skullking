@@ -75,7 +75,7 @@ export const voiceCommand = (alts: string[]): 'accept' | 'cancel' | null =>
 // Voice works for Russian only (voice-core grammar), so these texts are Russian.
 const REASON: Record<Fail['reason'], string> = {
   empty: 'ничего не расслышал',
-  unknown_word: 'лишнее слово',
+  unknown_word: 'не разобрал',
   no_pairs: 'нет имени с числом',
   out_of_range: 'число больше, чем карт',
   conflict: 'два разных числа для одного игрока',
