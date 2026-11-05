@@ -78,7 +78,8 @@
 
 /* Dealer: pick on the players screen, mark next to the name on bids and round. Not in the original. */
 .dealer-hint { margin: -4px 0 8px; color: var(--placeholder); }
-.circle.dealer-pick:not(.on) { background: var(--grain), var(--fibre), var(--color-card); color: var(--color-muted); box-shadow: inset 0 0 0 1px var(--color-rule), 0 var(--edge) 0 0 var(--color-edge); }
+.circle.dealer-pick:not(.on) { background: var(--color-card); color: var(--color-muted); box-shadow: inset 0 0 0 1px var(--color-edge); }
+.circle.dealer-pick:not(.on):active { background: var(--color-paper-2); }
 .dealer-mark { display: inline-flex; vertical-align: -2px; margin-left: 8px; padding: 2px; border-radius: 6px; background: var(--primary); color: var(--on-primary); }
 
 /* Drag to reorder (edit players): handle on the left, the lifted card casts its shadow, neighbours glide (dnd-kit). */
