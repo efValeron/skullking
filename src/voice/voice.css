@@ -25,6 +25,11 @@
 @media (prefers-reduced-motion: reduce) { .appbar-btn.mic.on::after { animation: none; opacity: 0.7; transform: none; } }
 
 /* Set by voice since the last manual edit; the halo keeps the layout still. */
-.stepper-value.voice-mark, .checkbox.voice-mark, .name-field.voice-mark { background: var(--changed); box-shadow: 0 0 0 4px var(--changed); border-radius: var(--radius-input); }
+.checkbox.voice-mark, .name-field.voice-mark { background: var(--changed); box-shadow: 0 0 0 4px var(--changed); border-radius: var(--radius-input); }
 .name-field.voice-mark { box-shadow: none; } /* a wide field: the fill is enough */
+/* A stepper number: a round honey spot behind it, clear of the round buttons on both sides. */
+.stepper-value.voice-mark { position: relative; isolation: isolate; }
+.stepper-value.voice-mark::before { content: ''; position: absolute; z-index: -1; top: 50%; left: 50%; width: 32px; height: 32px; margin: -16px 0 0 -16px; border-radius: 50%; background: var(--changed); animation: voice-mark-in 0.2s ease-out; }
+@keyframes voice-mark-in { from { opacity: 0; transform: scale(0.6); } }
+@media (prefers-reduced-motion: reduce) { .stepper-value.voice-mark::before { animation: none; } }
 .name-field.voice-target { outline: 2px solid var(--now); outline-offset: 2px; }
