@@ -133,7 +133,7 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
                       setDealer(dealerAfterRemove(dealer, i));
                     }}
                   >
-                    -
+                    <Icon name="minus" size={18} />
                   </button>
                 </>
               )}
@@ -162,7 +162,7 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
           </SortableContext>
         </DndContext>
         <button className="btn btn-outline add-bar" aria-label={t.add} disabled={edit} onClick={() => setNames([...names, ''])}>
-          +
+          <Icon name="plus" size={20} />
         </button>
         <Button disabled={!namesValid(names)} onClick={() => onSubmit(names, edit ? inGame : names.map(() => true), dealer, edit ? order : names.map((_, i) => i))}>
           {edit ? t.savePlayers : t.newGame}

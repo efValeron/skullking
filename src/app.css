@@ -1,106 +1,123 @@
-/* Hallmark · shape: app screen · genre: playful · theme: Werkstatt (deal 3/3, seed score-keeper-card-game-d61c·64fa94fd·2026-11-05·r0) · redesign: restyle
- * nav: kept (app bar and menu) · signature: the score table as a ruled sheet, totals in Jost · states: empty, current, changed, invalid, away, disabled, listening · werkstatt: putty, body Golos Text (Karla has no Cyrillic)
- * axes: mid/geometric-sans/cool · posture: full-palette · contrast: pass · v2.0.0 */
-/* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V4 · weakest: S, a scorepad of steppers could be any form; the ruled table and Jost figures carry it, blue marks only what is happening now */
+/* Hallmark · shape: app screen · genre: playful · theme: Hum (deal 1/3, seed score-keeper-card-game-d61c·64fa94fd·2026-11-05·r0) · redesign: restyle
+ * nav: kept (app bar and menu) · signature: the score table on cut paper, totals in Nunito 700 · states: empty, current, changed, invalid, away, disabled, listening · motion: spring on the primary only · hum: body Nunito (Chillax has no Cyrillic)
+ * axes: light/rounded-sans/chromatic-yellow · posture: full-palette · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V4 · weakest: S, card-stock controls could be any kids' app; the torn paper and pressed card stock echo the original's paper and keep it a table game */
 @import url("./tokens.css");
 @import url("./base.css");
 
-/* The screens use these names; they point at Werkstatt's tokens. Primaries code states, never actions:
-   blue = now (live round, dealer, listening), yellow = changed, red = an error. The main action is ink. */
+/* The screens use these names; they point at Hum's tokens. Pear is the main action, blue links and focus,
+   coral the one loud state (an error), ink with paper type a chosen thing (now: live round, dealer, listening). */
 :root {
-  --primary: var(--color-ink);
-  --on-primary: var(--color-paper);
+  --primary: var(--color-accent);
+  --on-primary: var(--color-accent-ink);
   --text: var(--color-ink);
   --focus: var(--color-focus);
-  --outline: var(--color-ink);
+  --outline: var(--color-rule);
   --divider: var(--color-rule);
   --paper: var(--color-paper);
   --surface: var(--color-paper);
-  --dialog: var(--color-paper);
-  --scrim: oklch(18% 0.008 60 / 0.54);
-  --pressed: oklch(18% 0.008 60 / 0.08);
-  --disabled-bg: oklch(18% 0.008 60 / 0.08);
+  --dialog: var(--color-card);
+  --scrim: oklch(20% 0.014 255 / 0.45);
+  --pressed: oklch(20% 0.014 255 / 0.06);
+  --disabled-bg: var(--color-paper-3);
   --disabled-text: var(--color-muted);
-  --menu-disabled: var(--color-rule);
+  --menu-disabled: oklch(20% 0.014 255 / 0.38);
   --on-check: var(--color-paper);
-  --field: var(--color-ink);
+  --field: var(--color-muted);
   --placeholder: var(--color-muted);
-  --hint-selected: var(--color-paper-2);
+  --hint-selected: var(--color-paper-3);
   --line: var(--color-rule);
   --total-strip: var(--color-paper-3);
-  --now: var(--color-accent);
-  --on-now: var(--color-accent-ink);
-  --changed: var(--color-accent-3);
-  --error: var(--color-accent-2-deep);
-  --on-error: var(--color-accent-ink);
+  --now: var(--color-ink);
+  --on-now: var(--color-paper);
+  --changed: color-mix(in oklab, var(--color-accent) 55%, var(--color-paper)); /* a highlighter, not the button pear */
+  --error: var(--color-accent-3);
+  --on-error: var(--color-ink);
   --pad: 10px;
+  --shadow-ink: oklch(20% 0.014 255 / 0.3);
+  --grain: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27180%27%20height%3D%27180%27%3E%3Cfilter%20id%3D%27n%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.85%27%20numOctaves%3D%272%27%20stitchTiles%3D%27stitch%27%2F%3E%3CfeColorMatrix%20values%3D%270%200%200%200%200.25%20%200%200%200%200%200.2%20%200%200%200%200%200.1%20%200%200%200%200.09%200%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url(%23n)%27%2F%3E%3C%2Fsvg%3E");
+  --fibre: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27420%27%20height%3D%27420%27%3E%3Cfilter%20id%3D%27f%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.008%200.22%27%20numOctaves%3D%273%27%20stitchTiles%3D%27stitch%27%2F%3E%3CfeColorMatrix%20values%3D%270%200%200%200%200.35%20%200%200%200%200%200.3%20%200%200%200%200%200.18%20%200%200%200%200.06%200%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url(%23f)%27%2F%3E%3C%2Fsvg%3E");
+  --torn-bottom: polygon(0 0, 100% 0, 100% calc(100% - 1.5px), 98.8% calc(100% - 2.91px), 95.4% calc(100% - 2.17px), 91.9% calc(100% - 1.92px), 88.4% calc(100% - 1.43px), 86.7% calc(100% - 1.80px), 84.5% calc(100% - 2.75px), 83.0% calc(100% - 2.45px), 80.4% calc(100% - 2.58px), 77.3% calc(100% - 2.73px), 74.5% calc(100% - 1.44px), 72.9% calc(100% - 2.34px), 70.4% calc(100% - 0.84px), 68.6% calc(100% - 3.11px), 65.8% calc(100% - 2.02px), 63.4% calc(100% - 1.15px), 60.0% calc(100% - 1.82px), 56.9% calc(100% - 1.63px), 53.8% calc(100% - 1.15px), 50.8% calc(100% - 2.90px), 47.6% calc(100% - 1.18px), 45.8% calc(100% - 2.08px), 43.1% calc(100% - 1.67px), 39.7% calc(100% - 2.77px), 38.2% calc(100% - 1.66px), 35.8% calc(100% - 1.11px), 32.6% calc(100% - 0.60px), 31.2% calc(100% - 2.31px), 27.7% calc(100% - 1.71px), 24.4% calc(100% - 3.16px), 23.0% calc(100% - 2.48px), 19.7% calc(100% - 2.41px), 17.4% calc(100% - 2.69px), 14.4% calc(100% - 3.16px), 12.8% calc(100% - 2.76px), 9.6% calc(100% - 2.19px), 6.4% calc(100% - 3.01px), 2.9% calc(100% - 2.74px), 0.0% calc(100% - 0.60px));
+  --torn-top: polygon(0.0% 0.60px, 3.2% 2.97px, 5.1% 1.77px, 7.1% 1.55px, 10.0% 2.42px, 11.4% 0.92px, 12.8% 0.85px, 14.0% 2.03px, 16.0% 1.80px, 17.8% 0.91px, 21.2% 0.88px, 24.6% 0.81px, 28.2% 2.00px, 30.1% 2.33px, 33.6% 0.77px, 35.6% 1.64px, 37.0% 2.19px, 39.1% 1.50px, 41.6% 1.50px, 45.0% 2.52px, 47.7% 1.03px, 50.0% 3.09px, 53.3% 2.92px, 54.7% 1.43px, 57.5% 2.96px, 60.3% 1.19px, 63.5% 2.93px, 67.1% 1.69px, 70.3% 0.88px, 71.5% 1.55px, 74.5% 1.21px, 77.3% 3.13px, 79.1% 2.19px, 81.0% 2.47px, 83.8% 1.86px, 85.3% 1.95px, 86.8% 0.69px, 89.2% 1.54px, 91.6% 1.35px, 93.8% 0.82px, 95.8% 0.62px, 98.6% 1.80px, 100% 1.5px, 100% 100%, 0 100%);
+  --torn-both: polygon(0.0% 0.60px, 2.4% 3.15px, 5.9% 2.79px, 9.9% 3.01px, 13.4% 2.81px, 15.7% 2.48px, 17.8% 0.78px, 20.3% 1.10px, 23.6% 1.94px, 25.8% 2.47px, 29.1% 0.90px, 30.9% 0.98px, 32.7% 2.40px, 35.7% 2.60px, 39.2% 0.75px, 42.5% 1.44px, 44.6% 2.58px, 48.5% 1.07px, 51.0% 3.04px, 52.5% 2.24px, 56.4% 0.93px, 58.6% 2.24px, 62.3% 2.45px, 66.2% 2.93px, 68.3% 1.07px, 72.1% 1.71px, 75.0% 2.55px, 77.1% 2.50px, 80.6% 3.06px, 84.1% 1.32px, 86.8% 0.84px, 90.0% 1.04px, 91.6% 1.78px, 93.6% 2.97px, 96.9% 2.83px, 98.4% 1.98px, 100% 1.5px, 100% calc(100% - 1.5px), 100.0% calc(100% - 1.03px), 97.5% calc(100% - 0.67px), 96.1% calc(100% - 1.48px), 94.2% calc(100% - 2.72px), 90.9% calc(100% - 1.42px), 89.3% calc(100% - 2.69px), 87.4% calc(100% - 1.11px), 84.3% calc(100% - 0.79px), 82.8% calc(100% - 1.87px), 79.0% calc(100% - 2.73px), 75.2% calc(100% - 1.03px), 71.9% calc(100% - 1.55px), 70.4% calc(100% - 1.68px), 66.9% calc(100% - 1.78px), 65.2% calc(100% - 0.87px), 61.2% calc(100% - 0.92px), 59.2% calc(100% - 2.50px), 56.9% calc(100% - 1.39px), 53.6% calc(100% - 2.03px), 50.8% calc(100% - 2.21px), 48.1% calc(100% - 2.52px), 44.9% calc(100% - 1.04px), 42.4% calc(100% - 2.97px), 40.0% calc(100% - 2.94px), 37.5% calc(100% - 1.39px), 35.3% calc(100% - 2.62px), 33.4% calc(100% - 0.68px), 31.9% calc(100% - 0.71px), 29.2% calc(100% - 2.93px), 26.0% calc(100% - 1.21px), 24.5% calc(100% - 1.62px), 21.7% calc(100% - 2.06px), 19.2% calc(100% - 3.14px), 15.8% calc(100% - 1.08px), 12.3% calc(100% - 2.16px), 10.3% calc(100% - 2.29px), 8.6% calc(100% - 3.05px), 5.7% calc(100% - 1.18px), 4.1% calc(100% - 2.11px), 2.6% calc(100% - 2.47px), 0.0% calc(100% - 1.54px), 0 calc(100% - 1.5px));
+  --torn-right: polygon(0 0, calc(100% - 0.60px) 0.0%, calc(100% - 2.11px) 3.4%, calc(100% - 1.73px) 4.9%, calc(100% - 2.62px) 8.7%, calc(100% - 0.80px) 10.3%, calc(100% - 2.23px) 12.0%, calc(100% - 0.67px) 15.1%, calc(100% - 1.00px) 16.6%, calc(100% - 2.15px) 18.7%, calc(100% - 2.22px) 21.3%, calc(100% - 2.24px) 25.1%, calc(100% - 2.55px) 27.9%, calc(100% - 3.00px) 31.6%, calc(100% - 1.71px) 33.2%, calc(100% - 2.01px) 36.1%, calc(100% - 2.44px) 38.5%, calc(100% - 1.86px) 42.4%, calc(100% - 1.71px) 45.9%, calc(100% - 1.45px) 48.3%, calc(100% - 1.83px) 51.3%, calc(100% - 2.10px) 54.1%, calc(100% - 2.26px) 58.1%, calc(100% - 1.74px) 60.6%, calc(100% - 1.29px) 62.8%, calc(100% - 0.83px) 64.7%, calc(100% - 1.18px) 68.0%, calc(100% - 0.67px) 69.9%, calc(100% - 1.11px) 71.9%, calc(100% - 2.43px) 75.4%, calc(100% - 2.27px) 79.3%, calc(100% - 1.57px) 82.2%, calc(100% - 1.80px) 85.6%, calc(100% - 1.15px) 89.1%, calc(100% - 2.43px) 90.9%, calc(100% - 2.99px) 93.2%, calc(100% - 2.01px) 95.6%, calc(100% - 1.50px) 98.7%, calc(100% - 1.5px) 100%, 0 100%);
   -webkit-tap-highlight-color: transparent;
 }
-body { min-height: 100vh; }
+body { min-height: 100vh; background: var(--grain), var(--fibre), var(--color-paper); }
 button, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :where(button, a, [tabindex]):focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-h1, h2, h3 { max-width: none; text-transform: uppercase; }
-h2 { font-size: var(--text-lg); }
+h1, h2, h3 { max-width: none; }
 
-/* App bar: flat putty, a 2px ink rule under it, title in Jost capitals. */
-.appbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; height: 56px; padding: 0 var(--space-md); background: var(--color-paper); border-bottom: var(--rule-bar) solid var(--color-ink); }
-.appbar h1 { font-size: var(--text-md); line-height: 1.2; margin-left: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* App bar: a torn sheet of paper-2 with its pale fibre core showing under the tear, lit from the top left. */
+.appbar { position: sticky; top: 0; z-index: 5; isolation: isolate; display: flex; align-items: center; height: 56px; padding: 0 var(--space-md); filter: var(--shadow-paper); }
+.appbar::before, .appbar::after { content: ''; position: absolute; z-index: -1; clip-path: var(--torn-bottom); }
+.appbar::before { inset: 0 0 -2px; background: var(--color-fringe); }
+.appbar::after { inset: 0; background: var(--grain), var(--fibre), var(--color-paper-2); }
+.appbar h1 { font-size: var(--text-lg); line-height: 1.2; margin-left: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .appbar-plain h1 { margin-left: 0; }
 .appbar-icon { display: flex; width: 24px; height: 24px; padding: 0; border: 0; background: none; color: var(--text); }
 .icon { display: block; flex: none; }
 
 .screen { display: flex; flex-direction: column; padding: var(--pad); }
 
-/* Buttons: square, 2px ink border, Golos 600 capitals. The filled one is ink; the outline one is the second action. */
-.btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; padding: 0 var(--space-md); border: var(--rule-bar) solid var(--outline); border-radius: 0; background: var(--primary); color: var(--on-primary); font: 600 var(--text-sm)/1.2 var(--font-body); text-transform: uppercase; }
-.btn:not(:disabled):active { background: var(--color-ink-2); }
-.btn:disabled { background: var(--disabled-bg); border-color: var(--disabled-text); color: var(--disabled-text); cursor: not-allowed; }
-.btn-small { width: auto; min-height: 32px; padding: 0 var(--space-md); }
-.btn.btn-outline { background: transparent; color: var(--text); border-color: var(--outline); }
-.btn.btn-outline:not(:disabled):active { background: var(--pressed); }
+/* Card stock: a solid edge below that a press flattens. Pear is the main action (spring), cream the second. */
+.btn { --edge: 4px; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; padding: 0 var(--space-md); border: 0; border-radius: var(--radius-stock); background: var(--grain), var(--fibre), var(--primary); color: var(--on-primary); font-weight: 700; font-size: var(--text-md); box-shadow: 0 var(--edge) 0 0 var(--color-accent-deep), 2px calc(var(--edge) + 4px) 10px -3px var(--shadow-ink); transition: translate var(--dur-micro) var(--ease-snap), box-shadow var(--dur-micro) var(--ease-snap); }
+.btn.btn-primary { transition-timing-function: var(--ease-spring); } /* the spring lives on the main action only */
+.btn:not(:disabled):active { --edge: 1px; translate: 0 3px; }
+.btn-small { width: auto; min-height: 32px; padding: 0 var(--space-md); font-size: var(--text-sm); --edge: 3px; }
+.btn.btn-outline { background: var(--grain), var(--fibre), var(--color-card); color: var(--text); box-shadow: inset 0 0 0 1px var(--color-rule), 0 var(--edge) 0 0 var(--color-edge); transition-timing-function: var(--ease-snap); }
+.btn:disabled, .btn.btn-outline:disabled { background: var(--grain), var(--disabled-bg); color: var(--disabled-text); box-shadow: inset 0 0 0 1px var(--color-rule); cursor: not-allowed; }
+/* 32px buttons keep their look but get a 44px-tall touch target */
+.btn-small, .btn.add-bar { position: relative; }
+.btn-small::after, .btn.add-bar::after { content: ""; position: absolute; inset: -6px 0; }
 
-/* Steppers: square 44px outline buttons around the value, set in Jost like a figure in its cell. */
+/* Steppers: cream card-stock keys around the value. */
 .stepper { display: flex; align-items: center; justify-content: center; }
-.stepper-value { width: 36px; text-align: center; font: 700 var(--text-lg)/1 var(--font-display); font-variant-numeric: tabular-nums; }
-.circle { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: var(--rule-bar) solid var(--outline); border-radius: 0; background: transparent; color: var(--text); font: 600 var(--text-lg)/1 var(--font-body); }
-.circle:not(:disabled):active { background: var(--pressed); }
-.circle:disabled { background: var(--disabled-bg); border-color: var(--disabled-text); color: var(--disabled-text); cursor: not-allowed; }
+.stepper-value { width: 36px; text-align: center; font-weight: 700; font-size: var(--text-lg); font-variant-numeric: tabular-nums; }
+.circle { --edge: 3px; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: var(--radius-stock); background: var(--grain), var(--fibre), var(--color-card); color: var(--text); font-weight: 700; font-size: var(--text-lg); box-shadow: inset 0 0 0 1px var(--color-rule), 0 var(--edge) 0 0 var(--color-edge); transition: translate var(--dur-micro) var(--ease-snap), box-shadow var(--dur-micro) var(--ease-snap); }
+.circle:not(:disabled):active { --edge: 1px; translate: 0 2px; }
+.circle:disabled { background: var(--disabled-bg); color: var(--disabled-text); box-shadow: inset 0 0 0 1px var(--color-rule); cursor: not-allowed; }
 
-/* Checkbox: 20px square, 2px ink; checked is ink with a paper tick. */
+/* Checkbox: rounded, a chosen one is ink with a paper tick. */
 .checkbox { display: inline-flex; align-items: center; gap: var(--space-sm); cursor: pointer; }
 .checkbox input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.checkbox-box { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: var(--rule-bar) solid var(--outline); border-radius: 0; color: var(--on-check); }
-.checkbox input:checked + .checkbox-box { background: var(--primary); }
+.checkbox-box { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border: 1.5px solid var(--color-muted); border-radius: 7px; background: var(--color-card); color: var(--text); }
+.checkbox input:checked + .checkbox-box { background: var(--now); border-color: var(--now); color: var(--on-check); }
 .checkbox:has(input:disabled) { cursor: not-allowed; }
-.checkbox input:disabled + .checkbox-box { background: var(--disabled-bg); border-color: var(--disabled-text); }
+.checkbox input:disabled + .checkbox-box { background: var(--disabled-bg); border-color: var(--color-rule); }
 .checkbox input:disabled:checked + .checkbox-box { background: var(--disabled-text); }
 .checkbox input:focus-visible + .checkbox-box { outline: 2px solid var(--focus); outline-offset: 3px; }
 
-/* A ruled cell with a lighter well: summaries, the card-limit warning, the edit hint. */
-.card { padding: var(--space-md); text-align: center; background: var(--color-paper-3); border: var(--rule-box) solid var(--color-ink); border-radius: 0; }
+/* A card of cream stock: summaries, the card-limit warning, the edit hint. */
+.card { position: relative; isolation: isolate; padding: var(--space-md); text-align: center; filter: var(--shadow-paper); }
+.card::before, .card::after { content: ""; position: absolute; z-index: -1; clip-path: var(--torn-both); }
+.card::before { inset: -2px 0; background: var(--color-fringe); }
+.card::after { inset: 0; background: var(--grain), var(--fibre), var(--color-card); }
 
-/* Overlays: square, ruled, no shadow. */
+/* Overlays: the sheet is torn along its top, the dialog and menu are cards. */
 .scrim { position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; background: var(--scrim); }
 .scrim-center { align-items: center; justify-content: center; }
-.sheet { width: 100%; max-height: 90vh; overflow: auto; background: var(--surface); border-top: var(--rule-box) solid var(--color-ink); }
-.dialog { width: 296px; padding: var(--space-lg); border: var(--rule-box) solid var(--color-ink); border-radius: 0; background: var(--dialog); }
+.sheet { position: relative; isolation: isolate; width: 100%; max-height: 90vh; overflow: auto; padding-top: var(--space-xs); filter: var(--shadow-paper); }
+.sheet::before, .sheet::after { content: ""; position: absolute; z-index: -1; clip-path: var(--torn-top); }
+.sheet::before { inset: -2px 0 0; background: var(--color-fringe); }
+.sheet::after { inset: 0; background: var(--grain), var(--fibre), var(--surface); }
+.dialog { width: 296px; padding: var(--space-lg); border-radius: var(--radius-card); background: var(--grain), var(--fibre), var(--dialog); box-shadow: var(--shadow-card); }
 .dialog h2 { margin-bottom: var(--space-md); }
-.dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-xs); margin-top: var(--space-lg); }
-.dialog-actions button { min-width: 64px; height: 40px; padding: 0 var(--space-md); border: var(--rule-bar) solid var(--outline); border-radius: 0; background: transparent; color: var(--text); font: 600 var(--text-sm)/1 var(--font-body); text-transform: uppercase; }
-.dialog-actions button:last-child { background: var(--primary); color: var(--on-primary); }
-.dialog-actions button:active { background: var(--pressed); }
-.dialog-actions button:last-child:active { background: var(--color-ink-2); }
-.drawer { position: fixed; inset: 0 auto 0 0; z-index: 11; width: 304px; overflow: auto; background: var(--surface); border-right: var(--rule-box) solid var(--color-ink); }
+.dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-sm); margin-top: var(--space-lg); }
+.drawer { position: fixed; inset: 0 auto 0 0; z-index: 11; isolation: isolate; width: 304px; overflow: auto; filter: var(--shadow-paper); }
+.drawer::before, .drawer::after { content: ""; position: absolute; z-index: -1; clip-path: var(--torn-right); }
+.drawer::before { inset: 0 -2px 0 0; background: var(--color-fringe); }
+.drawer::after { inset: 0; background: var(--grain), var(--fibre), var(--color-paper-2); }
 .drawer-scrim { position: fixed; inset: 0; z-index: 10; background: var(--scrim); }
 
-/* Motion is state only: the menu and sheets slide in, the dialog fades; screen changes stay instant. */
+/* Motion is state: the menu and sheets slide in, the dialog fades; the spring stays on the pear button. */
 @keyframes fade { from { opacity: 0; } }
 @keyframes slide-up { from { transform: translateY(100%); } }
 @keyframes slide-right { from { transform: translateX(-100%); } }
-.scrim, .drawer-scrim, .dialog { animation: fade var(--dur-micro) var(--ease-out); }
-.sheet { animation: slide-up var(--dur-short) var(--ease-out); }
-.drawer { animation: slide-right var(--dur-short) var(--ease-out); }
+.scrim, .drawer-scrim, .dialog { animation: fade var(--dur-micro) var(--ease-snap); }
+.sheet { animation: slide-up var(--dur-short) var(--ease-snap); }
+.drawer { animation: slide-right var(--dur-short) var(--ease-snap); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; }
 }

@@ -16,8 +16,8 @@ await page.goto(URL);
 const btn = (name) => page.getByRole('button', { name, exact: true });
 const preset = (name) => page.getByRole('button', { name: new RegExp(`^${name} \\+\\d+$`) }); // «Лут +20»
 const group = (name) => page.getByRole('group', { name, exact: true });
-const plus = async (g, n = 1) => { for (let i = 0; i < n; i++) await group(g).getByRole('button', { name: '+' }).click(); };
-const minus = async (g, n = 1) => { for (let i = 0; i < n; i++) await group(g).getByRole('button', { name: '-' }).click(); };
+const plus = async (g, n = 1) => { for (let i = 0; i < n; i++) await group(g).getByRole('button', { name: 'Больше' }).click(); };
+const minus = async (g, n = 1) => { for (let i = 0; i < n; i++) await group(g).getByRole('button', { name: 'Меньше' }).click(); };
 const menu = () => btn('Открыть меню навигации').click();
 const dealer = async () => (await page.locator('.player-name:has(.dealer-mark):visible').textContent()).trim(); // DOM text, not the CSS capitals
 /** Gap between the last player field and the «+» bar (must stay 8px). */

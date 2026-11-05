@@ -1,4 +1,4 @@
-/* Hallmark · theme: Werkstatt · genre: playful · shape: app screen · stamp in src/app.css
+/* Hallmark · theme: Hum · genre: playful · shape: app screen · stamp in src/app.css
  * built: the project · redesign: restyle · v2.0.0 */
 /* Navigation drawer (docs/original-ux.md §2 «Меню»): Material DrawerHeader + 48px list tiles. */
 .drawer > h2 { text-wrap: balance; margin: 16px 16px 0; font-size: var(--text-md); line-height: 24px; text-align: center; }
