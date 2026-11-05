@@ -53,7 +53,7 @@ export function Button(props: { children: ReactNode; onClick: () => void; disabl
 }
 
 /** − value +; clamps to [min, max]. `label` names the group for screen readers and tests. */
-export function Stepper(props: { label: string; value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number; disabled?: boolean; /** set by voice: highlighted */ mark?: boolean }) {
+export function Stepper(props: { label: string; value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number; disabled?: boolean; /** set by voice: highlighted, unless 0 */ mark?: boolean }) {
   const { label, value, onChange, min = 0, max = Infinity, step = 1, disabled, mark } = props;
   const set = (v: number) => onChange(Math.min(max, Math.max(min, v)));
   return (
@@ -61,7 +61,7 @@ export function Stepper(props: { label: string; value: number; onChange: (v: num
       <button className="circle" aria-label={t.decrease} disabled={disabled} onClick={() => set(value - step)}>
         <Icon name="minus" size={18} />
       </button>
-      <span className="stepper-value">{mark ? <mark>{value}</mark> : value}</span>
+      <span className="stepper-value">{mark && value !== 0 ? <mark>{value}</mark> : value}</span>
       <button className="circle" aria-label={t.increase} disabled={disabled} onClick={() => set(value + step)}>
         <Icon name="plus" size={18} />
       </button>

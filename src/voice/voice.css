@@ -24,11 +24,10 @@
 @keyframes voice-ring { from { opacity: 0.7; transform: scale(0.9); } to { opacity: 0; transform: scale(1.25); } }
 @media (prefers-reduced-motion: reduce) { .appbar-btn.mic.on::after { animation: none; opacity: 0.7; transform: none; } }
 
-/* Set by voice since the last manual edit. A number or the Kraken word gets Hum's highlighter: a slanted
- * honey swipe across the lower half of the glyphs (a <mark>), drawn left to right; a name field is filled. */
-.name-field.voice-mark { background: var(--changed); }
-.stepper-value mark, .checkbox mark { position: relative; isolation: isolate; padding: 0 4px; background: none; color: inherit; }
-.stepper-value mark::before, .checkbox mark::before { content: ''; position: absolute; z-index: -1; inset: 34% -1px 12%; background: var(--changed); clip-path: polygon(0 26%, 100% 0, 97% 100%, 3% 88%); transform-origin: left center; animation: voice-swipe 0.24s var(--ease-snap); }
-@keyframes voice-swipe { from { transform: scaleX(0); } }
-@media (prefers-reduced-motion: reduce) { .stepper-value mark::before, .checkbox mark::before { animation: none; } }
+/* Set by voice since the last manual edit (Валерий chose this of three): the number, the Kraken word or
+ * the name turns wine, a number also a size up. No fill, nothing squeezed between the round buttons;
+ * a voiced 0 stays plain (Stepper). */
+.stepper-value mark, .checkbox mark { padding: 0; background: none; color: var(--primary); }
+.stepper-value mark { font-size: 20px; }
+.name-field.voice-mark { color: var(--primary); }
 .name-field.voice-target { outline: 2px solid var(--now); outline-offset: 2px; }
