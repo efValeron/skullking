@@ -1,115 +1,108 @@
-/* Hallmark · checked: 2026-11-05 · genre: playful (inferred) · shape: app screen
- * floor: 0 FAIL · fixed: 7a, 26a, 39a, 40, 48, 67, 24b, 26b, F4, F23 · structural: none (app screens keep the original's layout)
- * built: the project · redesign: polish · v2.0.0 */
-/* Global look of the clone. Values from docs/original-ux.md §1 (sampled from the original); deliberate changes in docs/deviations.md. */
+/* Hallmark · shape: app screen · genre: playful · theme: Werkstatt (deal 3/3, seed score-keeper-card-game-d61c·64fa94fd·2026-11-05·r0) · redesign: restyle
+ * nav: kept (app bar and menu) · signature: the score table as a ruled sheet, totals in Jost · states: empty, current, changed, invalid, away, disabled, listening · werkstatt: putty, body Golos Text (Karla has no Cyrillic)
+ * axes: mid/geometric-sans/cool · posture: full-palette · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V4 · weakest: S, a scorepad of steppers could be any form; the ruled table and Jost figures carry it, blue marks only what is happening now */
+@import url("./tokens.css");
+@import url("./base.css");
+
+/* The screens use these names; they point at Werkstatt's tokens. Primaries code states, never actions:
+   blue = now (live round, dealer, listening), yellow = changed, red = an error. The main action is ink. */
 :root {
-  /* Original #c2525b gave 3.54:1 under the light button text; same hue, darker, for 4.5:1+ (Hallmark audit, gate 40). */
-  --primary: #a63b43;
-  --primary-glow: rgba(166, 59, 67, 0.25);
-  --on-primary: #eee3cb;
-  --text: #1e1b16;
-  --focus: #1e1b16;
-  --outline: #2b2822;
-  --divider: #d0c5b4;
-  --paper: #f6ecd9;
-  --surface: #f8f2f2;
-  --dialog: #e8dbc1;
-  --scrim: rgba(0, 0, 0, 0.54);
-  --pressed: rgba(30, 27, 22, 0.08);
-  --disabled-bg: rgba(30, 27, 22, 0.12);
-  --disabled-text: rgba(30, 27, 22, 0.38);
-  --menu-disabled: rgba(0, 0, 0, 0.38);
-  --on-check: #fffaf2;
-  --field: #7f7667;
-  --placeholder: #5f5747;
-  --hint-selected: #d8cfbe;
-  --hint-shadow: 0 3px 4px rgba(0, 0, 0, 0.2), 0 1px 8px rgba(0, 0, 0, 0.12);
-  /* Leaderboard */
-  --line: rgba(0, 0, 0, 0.45);
-  --total-strip: rgba(0, 0, 0, 0.12);
-  --current-row: rgba(38, 123, 116, 0.333);
-  --changed: #ffd740;
-  --error: #ff5252;
-  --error-text: #d41111;
+  --primary: var(--color-ink);
+  --on-primary: var(--color-paper);
+  --text: var(--color-ink);
+  --focus: var(--color-focus);
+  --outline: var(--color-ink);
+  --divider: var(--color-rule);
+  --paper: var(--color-paper);
+  --surface: var(--color-paper);
+  --dialog: var(--color-paper);
+  --scrim: oklch(18% 0.008 60 / 0.54);
+  --pressed: oklch(18% 0.008 60 / 0.08);
+  --disabled-bg: oklch(18% 0.008 60 / 0.08);
+  --disabled-text: var(--color-muted);
+  --menu-disabled: var(--color-rule);
+  --on-check: var(--color-paper);
+  --field: var(--color-ink);
+  --placeholder: var(--color-muted);
+  --hint-selected: var(--color-paper-2);
+  --line: var(--color-rule);
+  --total-strip: var(--color-paper-3);
+  --now: var(--color-accent);
+  --on-now: var(--color-accent-ink);
+  --changed: var(--color-accent-3);
+  --error: var(--color-accent-2-deep);
+  --on-error: var(--color-accent-ink);
   --pad: 10px;
-  font-family: Pangolin, 'Comic Sans MS', sans-serif;
-  font-synthesis: none;
-  color: var(--text);
   -webkit-tap-highlight-color: transparent;
 }
-* { box-sizing: border-box; }
-body { margin: 0; font-size: 14px; line-height: 20px; letter-spacing: 0.25px; background: var(--paper); min-height: 100vh; }
-/* Paper stays put while content scrolls, like the Flutter Scaffold background. */
-body::before { content: ''; position: fixed; inset: 0; z-index: -1; background: url('./assets/paper.svg') center / 100% 100% no-repeat; }
-button, input { font: inherit; letter-spacing: inherit; color: inherit; }
+body { min-height: 100vh; }
+button, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
-/* Keyboard focus: instant 2px ring in ink, outside the control (15:1 on paper). Touch and mouse don't show it. */
 :where(button, a, [tabindex]):focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-h1, h2, h3, p { margin: 0; font-weight: 400; }
-h1, h2 { text-wrap: balance; }
-[hidden] { display: none !important; }
+h1, h2, h3 { max-width: none; text-transform: uppercase; }
+h2 { font-size: var(--text-lg); }
 
-/* App bar: 56px paper strip with a torn edge, title 22px. */
-.appbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; height: 56px; padding: 0 16px; background: url('./assets/appbar.svg') top / 100% 58px no-repeat; }
-.appbar h1 { font-size: 22px; line-height: 28px; letter-spacing: 0; margin-left: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* App bar: flat putty, a 2px ink rule under it, title in Jost capitals. */
+.appbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; height: 56px; padding: 0 var(--space-md); background: var(--color-paper); border-bottom: var(--rule-bar) solid var(--color-ink); }
+.appbar h1 { font-size: var(--text-md); line-height: 1.2; margin-left: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .appbar-plain h1 { margin-left: 0; }
 .appbar-icon { display: flex; width: 24px; height: 24px; padding: 0; border: 0; background: none; color: var(--text); }
 .icon { display: block; flex: none; }
 
 .screen { display: flex; flex-direction: column; padding: var(--pad); }
 
-/* Primary button: 370×50, radius 8, dark outline. */
-.btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 50px; padding: 0 16px; border: 1px solid var(--outline); border-radius: 8px; background: var(--primary); color: var(--on-primary); font-size: 14px; letter-spacing: 0.1px; }
-.btn:disabled { background: var(--disabled-bg); color: var(--disabled-text); cursor: default; }
-.btn-small { width: auto; min-height: 32px; padding: 0 24px; }
-/* Secondary action: outline only, so a screen keeps one filled button. */
-.btn.btn-outline { background: transparent; color: var(--primary); border-color: var(--primary); }
-.btn.btn-outline:not(:disabled):active { background: var(--pressed); filter: none; }
-.btn:not(:disabled):active, .circle:not(:disabled):active { filter: brightness(0.92); }
+/* Buttons: square, 2px ink border, Golos 600 capitals. The filled one is ink; the outline one is the second action. */
+.btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; padding: 0 var(--space-md); border: var(--rule-bar) solid var(--outline); border-radius: 0; background: var(--primary); color: var(--on-primary); font: 600 var(--text-sm)/1.2 var(--font-body); text-transform: uppercase; }
+.btn:not(:disabled):active { background: var(--color-ink-2); }
+.btn:disabled { background: var(--disabled-bg); border-color: var(--disabled-text); color: var(--disabled-text); cursor: not-allowed; }
+.btn-small { width: auto; min-height: 32px; padding: 0 var(--space-md); }
+.btn.btn-outline { background: transparent; color: var(--text); border-color: var(--outline); }
+.btn.btn-outline:not(:disabled):active { background: var(--pressed); }
 
-/* Round stepper buttons 45px; value box 34px. */
+/* Steppers: square 44px outline buttons around the value, set in Jost like a figure in its cell. */
 .stepper { display: flex; align-items: center; justify-content: center; }
-.stepper-value { width: 34px; text-align: center; }
-.circle { display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; padding: 0; border: 1px solid var(--outline); border-radius: 50%; background: var(--primary); color: var(--on-primary); font-size: 14px; letter-spacing: 0.1px; }
-.circle:disabled { background: var(--disabled-bg); color: var(--disabled-text); cursor: default; }
+.stepper-value { width: 36px; text-align: center; font: 700 var(--text-lg)/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.circle { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: var(--rule-bar) solid var(--outline); border-radius: 0; background: transparent; color: var(--text); font: 600 var(--text-lg)/1 var(--font-body); }
+.circle:not(:disabled):active { background: var(--pressed); }
+.circle:disabled { background: var(--disabled-bg); border-color: var(--disabled-text); color: var(--disabled-text); cursor: not-allowed; }
 
-/* Checkbox 18px, 2px outline; checked = primary fill. */
-.checkbox { display: inline-flex; align-items: center; gap: 16px; cursor: pointer; }
+/* Checkbox: 20px square, 2px ink; checked is ink with a paper tick. */
+.checkbox { display: inline-flex; align-items: center; gap: var(--space-sm); cursor: pointer; }
 .checkbox input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.checkbox-box { display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 2px solid var(--outline); border-radius: 2px; color: var(--on-check); }
-.checkbox input:checked + .checkbox-box { background: var(--primary); border-color: var(--primary); }
-/* Disabled: fill, ink and cursor all change (not opacity alone). */
+.checkbox-box { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: var(--rule-bar) solid var(--outline); border-radius: 0; color: var(--on-check); }
+.checkbox input:checked + .checkbox-box { background: var(--primary); }
 .checkbox:has(input:disabled) { cursor: not-allowed; }
 .checkbox input:disabled + .checkbox-box { background: var(--disabled-bg); border-color: var(--disabled-text); }
 .checkbox input:disabled:checked + .checkbox-box { background: var(--disabled-text); }
-.checkbox input:focus-visible + .checkbox-box { outline: 2px solid var(--primary); outline-offset: 3px; }
+.checkbox input:focus-visible + .checkbox-box { outline: 2px solid var(--focus); outline-offset: 3px; }
 
-/* Light brush-stroke card, radius 12. */
-.card { padding: 20px 16px; border-radius: 12px; text-align: center; background: url('./assets/card.svg') center / 100% 100% no-repeat; }
+/* A ruled cell with a lighter well: summaries, the card-limit warning, the edit hint. */
+.card { padding: var(--space-md); text-align: center; background: var(--color-paper-3); border: var(--rule-box) solid var(--color-ink); border-radius: 0; }
 
-/* Overlays */
+/* Overlays: square, ruled, no shadow. */
 .scrim { position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; background: var(--scrim); }
 .scrim-center { align-items: center; justify-content: center; }
-.sheet { width: 100%; max-height: 90vh; overflow: auto; background: var(--surface); }
-.dialog { width: 281px; padding: 24px; border-radius: 28px; background: var(--dialog); }
-.dialog h2 { font-size: 24px; line-height: 32px; letter-spacing: 0; margin-bottom: 16px; }
-.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
-.dialog-actions button { min-width: 56px; height: 32px; padding: 0 12px; border: 0; border-radius: 16px; background: none; color: var(--primary); font-size: 14px; letter-spacing: 0.1px; }
-.drawer { position: fixed; inset: 0 auto 0 0; z-index: 11; width: 304px; overflow: auto; background: var(--surface); }
+.sheet { width: 100%; max-height: 90vh; overflow: auto; background: var(--surface); border-top: var(--rule-box) solid var(--color-ink); }
+.dialog { width: 296px; padding: var(--space-lg); border: var(--rule-box) solid var(--color-ink); border-radius: 0; background: var(--dialog); }
+.dialog h2 { margin-bottom: var(--space-md); }
+.dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-xs); margin-top: var(--space-lg); }
+.dialog-actions button { min-width: 64px; height: 40px; padding: 0 var(--space-md); border: var(--rule-bar) solid var(--outline); border-radius: 0; background: transparent; color: var(--text); font: 600 var(--text-sm)/1 var(--font-body); text-transform: uppercase; }
+.dialog-actions button:last-child { background: var(--primary); color: var(--on-primary); }
+.dialog-actions button:active { background: var(--pressed); }
+.dialog-actions button:last-child:active { background: var(--color-ink-2); }
+.drawer { position: fixed; inset: 0 auto 0 0; z-index: 11; width: 304px; overflow: auto; background: var(--surface); border-right: var(--rule-box) solid var(--color-ink); }
 .drawer-scrim { position: fixed; inset: 0; z-index: 10; background: var(--scrim); }
 
-/* Material-like overlay motion (screen changes themselves are instant, like the original). */
+/* Motion is state only: the menu and sheets slide in, the dialog fades; screen changes stay instant. */
 @keyframes fade { from { opacity: 0; } }
 @keyframes slide-up { from { transform: translateY(100%); } }
 @keyframes slide-right { from { transform: translateX(-100%); } }
-@keyframes pop { from { opacity: 0; transform: scale(0.9); } }
-.scrim, .drawer-scrim { animation: fade 200ms ease-out; }
-.sheet { animation: slide-up 250ms cubic-bezier(0.2, 0, 0, 1); }
-.drawer { animation: slide-right 246ms cubic-bezier(0.2, 0, 0, 1); }
-.dialog { animation: pop 150ms ease-out; }
+.scrim, .drawer-scrim, .dialog { animation: fade var(--dur-micro) var(--ease-out); }
+.sheet { animation: slide-up var(--dur-short) var(--ease-out); }
+.drawer { animation: slide-right var(--dur-short) var(--ease-out); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; }
 }
 
-/* Kept for stage-2 layouts */
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }

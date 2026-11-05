@@ -161,7 +161,7 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
             </div>
           </SortableContext>
         </DndContext>
-        <button className="btn add-bar" aria-label={t.add} disabled={edit} onClick={() => setNames([...names, ''])}>
+        <button className="btn btn-outline add-bar" aria-label={t.add} disabled={edit} onClick={() => setNames([...names, ''])}>
           +
         </button>
         <Button disabled={!namesValid(names)} onClick={() => onSubmit(names, edit ? inGame : names.map(() => true), dealer, edit ? order : names.map((_, i) => i))}>

@@ -1,0 +1,27 @@
+[
+ {
+  "scope": "app",
+  "shape": "app screen",
+  "theme": "werkstatt",
+  "axes": "mid/geometric-sans/cool",
+  "hero": "none",
+  "nav": "kept app bar and menu",
+  "footer": "none",
+  "imagery": "none",
+  "photos": [],
+  "entry": "redesign: restyle",
+  "sections": [
+   "start",
+   "players",
+   "options",
+   "bids",
+   "round",
+   "leaderboard"
+  ],
+  "signature": "the score table as a ruled sheet, totals in Jost",
+  "waived": [],
+  "prompt": "score keeper for the card game Skull King, tallied at the table on a phone, with voice input",
+  "date": "2026-11-05",
+  "mode": "build"
+ }
+]

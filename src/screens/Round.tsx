@@ -76,7 +76,7 @@ export function RoundScreen({ game, onMenu, onChange: save, onFinish }: RoundPro
                 <span>{t.bids}</span> <span>{t.tricks}</span> <span>{t.bonus}</span>
               </div>
               <div className="round-row">
-                <span>{p.bid}</span>
+                <span className="stepper-value">{p.bid}</span>
                 <Stepper label={`${name}: ${t.tricks}`} value={p.trick} max={r.cardsInRound} disabled={p.away} onChange={(trick) => setPlayer(i, { trick })} />
                 <Stepper label={`${name}: ${t.bonus}`} value={p.bonus} step={10} disabled={p.away} onChange={(bonus) => setPlayer(i, { bonus })} />
                 <button className="circle circle-sm" aria-label={`${name}: ★`} disabled={p.away} onClick={() => setSheet(i)}>

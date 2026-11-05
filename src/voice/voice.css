@@ -1,20 +1,18 @@
-/* Hallmark · checked: 2026-11-05 · genre: playful (inferred) · shape: app screen · stamp in src/app.css
- * built: the project · redesign: polish · v2.0.0 */
-/* Voice input block. No equivalent in the original: same visual language (red buttons, paper card). */
+/* Hallmark · theme: Werkstatt · genre: playful · shape: app screen · stamp in src/app.css
+ * built: the project · redesign: restyle · v2.0.0 */
+/* Voice input block. No equivalent in the original: an outline button, a ruled draft cell, blue while listening. */
 .voice { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 12px; }
 /* Secondary look so it doesn't compete with the screen's main action; filled while listening. */
 .btn.btn-voice { gap: 8px; background: transparent; color: var(--primary); border-color: var(--primary); }
 .btn.btn-voice:not(:disabled):active { background: var(--pressed); filter: none; }
 .btn.btn-voice:disabled { border-color: var(--disabled-text); color: var(--disabled-text); cursor: not-allowed; }
-.btn.btn-voice.listening { background: var(--primary); color: var(--on-primary); animation: voice-pulse 1.2s ease-in-out infinite; }
-@keyframes voice-pulse { 50% { box-shadow: 0 0 0 6px var(--primary-glow); } }
-.voice-interim { font-style: italic; opacity: 0.7; text-align: center; }
+.btn.btn-voice.listening { background: var(--now); border-color: var(--now); color: var(--on-now); }
+.voice-interim { font-style: italic; color: var(--color-muted); text-align: center; }
 .voice-draft { width: 100%; display: flex; flex-direction: column; gap: 12px; }
 .voice-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.voice-chips li { padding: 4px 12px; border: 1px solid var(--outline); border-radius: 16px; background: var(--paper); }
-.voice-note { font-size: 13px; opacity: 0.8; }
+.voice-chips li { padding: 4px 12px; border: var(--rule-bar) solid var(--outline); border-radius: 0; background: var(--color-paper-3); }
+.voice-note { font-size: var(--text-sm); color: var(--color-muted); }
 .voice-actions { display: flex; justify-content: center; gap: 12px; }
-.voice-problem { color: var(--error-text); text-align: center; }
-.name-field.voice-target { outline: 2px solid var(--primary); outline-offset: -2px; }
-@media (prefers-reduced-motion: reduce) { .btn.btn-voice.listening { animation: none; } }
+.voice-problem { padding: 8px 12px; background: var(--error); color: var(--on-error); text-align: center; }
+.name-field.voice-target { outline: 2px solid var(--now); outline-offset: 2px; }
 .btn.btn-voice:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
