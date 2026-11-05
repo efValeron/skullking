@@ -1,0 +1,27 @@
+:root {
+  color-scheme: light;
+  --space-3xs: 2px; --space-2xs: 4px; --space-xs: 8px; --space-sm: 12px; --space-md: 16px; --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px; --space-3xl: 96px; --space-4xl: 144px;
+  --text-xs: 0.75rem; --text-sm: 0.875rem; --text-md: 1rem; --text-lg: 1.2rem; --text-xl: 1.44rem; --text-2xl: 1.728rem; --text-3xl: 2.074rem;
+  --text-display-s: 1.44rem; --text-display: 1.728rem; --text-section: 1.2rem; --text-title: 1rem; --text-lead: 1rem;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-in: cubic-bezier(0.7, 0, 0.84, 0); --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms; --dur-short: 220ms; --dur-long: 420ms;
+  --color-error: oklch(52% 0.19 27); --color-success: oklch(50% 0.12 150);
+  --container: 1440px; --gutter: 64px; --gap-columns: 32px; --section-gap-s: 120px; --section-gap: 144px; --section-gap-l: 176px;
+  --z-base: 1; --z-raised: 10; --z-dropdown: 100; --z-sticky: 200; --z-sticky-nav: 300; --z-modal: 400; --z-toast: 500; --z-tooltip: 600;
+  /* Palette in the spirit of the original, not its hexes: parchment, sepia ink, wine, sea teal, honey, brick. */
+  --color-paper: oklch(94.5% 0.026 83); --color-paper-2: oklch(88.5% 0.044 78); --color-paper-3: oklch(91% 0.034 81);
+  --color-ink: oklch(23% 0.016 60); --color-ink-2: oklch(31% 0.018 55); --color-muted: oklch(47% 0.026 68);
+  --color-rule: oklch(84% 0.03 80);
+  --color-accent: oklch(48% 0.13 22); --color-accent-deep: oklch(35% 0.1 20); --color-accent-ink: oklch(96% 0.025 85);
+  --color-accent-2: oklch(48% 0.075 192); --color-accent-3: oklch(65% 0.16 30); --color-honey: oklch(87% 0.115 86);
+  --color-focus: var(--color-ink);
+  --color-card: oklch(98.4% 0.012 84); --color-edge: oklch(80% 0.05 76); --color-fringe: oklch(99% 0.008 84);
+  --color-grid: oklch(57% 0.02 70); /* the table's ink rules, as the original's 45% black on paper */
+  --font-display: "Pangolin", "Comic Sans MS", sans-serif; --font-body: var(--font-display); /* the original's face; one weight */
+  --font-outlier: "Geist Mono", ui-monospace, monospace;
+  --radius-card: 12px; --radius-stock: 8px; --radius-input: 4px; --radius-dialog: 28px; --radius-pill: 999px; --rule-hair: 1px;
+  --shadow-card: 0 1px 2px oklch(24% 0.03 50 / 0.06), 0 12px 28px -14px oklch(24% 0.03 50 / 0.22);
+  --shadow-paper: drop-shadow(0 0 0.6px oklch(24% 0.03 50 / 0.32)) drop-shadow(1.5px 2.5px 1.5px oklch(24% 0.03 50 / 0.1)) drop-shadow(6px 14px 16px oklch(24% 0.03 50 / 0.13));
+  --tracking-display: 0; --display-weight: 400;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); --ease-snap: cubic-bezier(0.22, 1, 0.36, 1);
+}

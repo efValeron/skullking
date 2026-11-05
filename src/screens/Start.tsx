@@ -28,7 +28,7 @@ export function StartScreen({ games, onNewGame, onContinue, onResults }: StartPr
                 <div className="game-date">{formatDate(g.startDate)}</div>
                 <div className="game-names">{g.playerNames.join(', ')}</div>
               </div>
-              <Button small onClick={() => (done ? onResults(i) : onContinue(i))}>
+              <Button small outline onClick={() => (done ? onResults(i) : onContinue(i))}>
                 {done ? t.results : t.continue}
               </Button>
             </div>

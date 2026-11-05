@@ -67,7 +67,7 @@ export function ScoresScreen(props: ScoresProps) {
           <Card>
             <p>{t.tapHint}</p>
             {!same(working, orig) && (
-              <Button small onClick={() => setWorking(orig)}>
+              <Button small outline onClick={() => setWorking(orig)}>
                 {t.revertChanges}
               </Button>
             )}

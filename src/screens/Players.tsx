@@ -92,7 +92,6 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
       <AppBar title={edit ? t.menuEditPlayers : t.newGame} icon={edit ? 'close' : 'back'} onIcon={onBack} />
       <main className={edit ? 'screen players-edit' : 'screen'}>
         <h2 className="section-title">{t.players}</h2>
-        {!edit && <p className="dealer-hint">{t.dealerHint}</p>}
         <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis, restrictToParentElement]} onDragEnd={onDragEnd}>
           <SortableContext items={ids} strategy={verticalListSortingStrategy}>
             <div className="player-list">
@@ -133,7 +132,7 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
                       setDealer(dealerAfterRemove(dealer, i));
                     }}
                   >
-                    -
+                    <Icon name="minus" size={18} />
                   </button>
                 </>
               )}
@@ -161,8 +160,8 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
             </div>
           </SortableContext>
         </DndContext>
-        <button className="btn add-bar" aria-label={t.add} disabled={edit} onClick={() => setNames([...names, ''])}>
-          +
+        <button className="btn btn-outline add-bar" aria-label={t.add} disabled={edit} onClick={() => setNames([...names, ''])}>
+          <Icon name="plus" size={20} />
         </button>
         <Button disabled={!namesValid(names)} onClick={() => onSubmit(names, edit ? inGame : names.map(() => true), dealer, edit ? order : names.map((_, i) => i))}>
           {edit ? t.savePlayers : t.newGame}

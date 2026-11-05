@@ -1,13 +1,14 @@
 /* Start, Players, Options, Bids, Round. Positions measured on the original at 390×844 (docs/original-ux.md §2). */
-.section-title { margin: 4px 0 8px; font-size: 22px; line-height: 28px; letter-spacing: 0; }
+.section-title { margin: 4px 0 8px; font-size: 22px; line-height: 28px; }
 .list-reset { margin: 0; padding: 0; list-style: none; }
-.circle.circle-sm { width: 32px; height: 32px; }
+.circle.circle-sm { position: relative; width: 32px; height: 32px; }
+.circle.circle-sm::after { content: ""; position: absolute; inset: -6px -3px; } /* 44px-tall touch target, same look */
 
 /* Start */
 .start-empty > .btn { margin-top: 4px; }
 .game { display: flex; align-items: flex-end; padding-bottom: 8px; border-bottom: 1px solid var(--divider); margin-bottom: 8px; }
 .game-info { flex: 1; min-width: 0; }
-.game-status { font-size: 16px; line-height: 24px; letter-spacing: 0; }
+.game-status { font-size: var(--text-md); line-height: 24px; }
 .game-date { line-height: 21px; }
 .game-names { line-height: 20.5px; }
 .game > .btn { width: 130px; flex: none; }
@@ -19,14 +20,13 @@
 /* 8px between fields and before «+» (the original had the fields touching). */
 .player-row + .player-row { margin-top: 8px; }
 .player-list:not(:empty) { margin-bottom: 8px; } /* on the list itself: dnd-kit puts hidden a11y nodes between it and «+» */
-.name-field { flex: 1; min-width: 0; height: 56px; padding: 0 12px; border: 1px solid var(--field); border-radius: 4px; background: none; font-size: 16px; letter-spacing: 0.5px; caret-color: var(--primary); }
+.name-field { flex: 1; min-width: 0; height: 56px; padding: 0 12px; border: 1px solid var(--field); border-radius: var(--radius-input); background: none; font-size: var(--text-md); letter-spacing: 0.5px; caret-color: var(--primary); }
 .name-field::placeholder { color: var(--placeholder); opacity: 1; }
-/* Focus = 2px primary edge drawn by the outline over the border (inputs always show it). */
-.name-field:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.name-field:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; } /* the original's wine edge over the border */
 .player-row .circle-sm { margin-left: 8px; }
 .player-row .name-field + .circle-sm { margin-left: 12px; }
 .players-edit .checkbox { margin-left: 16px; }
-.hints { position: absolute; top: 56px; left: 0; z-index: 2; width: 380px; background: var(--paper); box-shadow: var(--hint-shadow); }
+.hints { position: absolute; top: 56px; left: 0; z-index: 2; width: 380px; overflow: hidden; border-radius: var(--radius-input); background: var(--grain), var(--color-paper); box-shadow: var(--shadow-card); }
 .hints button { display: block; width: 100%; height: 52px; padding: 0 16px; border: 0; background: none; text-align: left; }
 .hints li:first-child button { background: var(--hint-selected); }
 .btn.add-bar { min-height: 32px; }
@@ -35,7 +35,7 @@
 /* Options: centred column */
 .screen.options { align-items: center; padding-top: 4px; }
 .screen.options-edit { padding-top: 8px; }
-.opt-label { font-size: 16px; line-height: 24px; letter-spacing: 0.15px; }
+.opt-label { font-size: var(--text-md); line-height: 24px; letter-spacing: 0.15px; }
 .opt-label + .stepper { margin-top: 4px; }
 .stepper + .opt-label { margin-top: 16px; }
 .options > .card { width: 100%; margin-top: 20px; padding: 20px; text-align: left; line-height: 20.5px; }
@@ -47,7 +47,7 @@
 .screen.round { padding-bottom: 40px; }
 /* Modal edit screens sit 4px lower (5px in the original, snapped to the 4px scale). */
 .screen.bids-edit { padding-top: 8px; }
-.player-name { font-size: 22px; line-height: 28px; letter-spacing: 0; text-align: center; }
+.player-name { font-size: 22px; line-height: 28px; text-align: center; }
 .bid-block { padding-bottom: 16px; border-bottom: 1px solid var(--divider); margin-bottom: 8px; }
 .bid-block .stepper { margin-top: 8px; }
 .bid-list > .bid-block:last-child { border-bottom-color: transparent; }
@@ -61,7 +61,7 @@
 .round-block { padding-bottom: 8px; border-bottom: 1px solid var(--divider); margin-bottom: 8px; }
 .round-block .player-name { margin-bottom: 8px; }
 .round-row { display: flex; align-items: center; text-align: center; }
-.round-labels { height: 23px; align-items: flex-start; }
+.round-labels { height: 23px; align-items: flex-start; color: var(--color-muted); }
 .round-labels > :not(:first-child) { padding-top: 2px; }
 .round-row > :nth-child(1) { width: 53px; }
 .round-row > :nth-child(2) { width: 124px; margin-left: 4px; }
@@ -77,13 +77,13 @@
 .bonus-pts { letter-spacing: 0.1px; }
 
 /* Dealer: pick on the players screen, mark next to the name on bids and round. Not in the original. */
-.dealer-hint { margin: -4px 0 8px; color: var(--placeholder); }
-.circle.dealer-pick:not(.on) { background: transparent; color: var(--field); border-color: var(--field); }
+.circle.dealer-pick:not(.on) { background: transparent; color: var(--color-muted); border-color: var(--field); }
+.circle.dealer-pick:not(.on):active { background: var(--pressed); }
 .dealer-mark { display: inline-flex; vertical-align: -3px; margin-left: 8px; color: var(--primary); }
 
-/* Drag to reorder (edit players): handle on the left, the lifted row casts a shadow, neighbours glide (dnd-kit). */
-.drag-handle { display: flex; align-items: center; justify-content: center; flex: none; width: 32px; height: 56px; margin-right: 4px; padding: 0; border: 0; border-radius: 4px; background: none; color: var(--field); cursor: grab; touch-action: none; }
+/* Drag to reorder (edit players): handle on the left, the lifted card casts its shadow, neighbours glide (dnd-kit). */
+.drag-handle { display: flex; align-items: center; justify-content: center; flex: none; width: 32px; height: 56px; margin-right: 4px; padding: 0; border: 0; border-radius: var(--radius-input); background: none; color: var(--field); cursor: grab; touch-action: none; }
 .player-row.dragging { z-index: 3; }
 .player-row.dragging .drag-handle { cursor: grabbing; }
-.player-row.dragging .name-field { background: var(--paper); box-shadow: var(--hint-shadow); }
+.player-row.dragging .name-field { background: var(--color-paper); box-shadow: var(--shadow-card); }
 @media (prefers-reduced-motion: reduce) { .player-row { transition: none !important; } }

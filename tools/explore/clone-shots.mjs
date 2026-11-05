@@ -29,8 +29,8 @@ const shot = async (name) => {
 const btn = (name) => page.getByRole('button', { name, exact: true });
 const preset = (name) => page.getByRole('button', { name: new RegExp(`^${name} \\+\\d+$`) });
 const group = (name) => page.getByRole('group', { name, exact: true });
-const plus = async (g, n = 1) => { for (let i = 0; i < n; i++) await group(g).getByRole('button', { name: '+' }).click(); };
-const minus = async (g, n = 1) => { for (let i = 0; i < n; i++) await group(g).getByRole('button', { name: '-' }).click(); };
+const plus = async (g, n = 1) => { for (let i = 0; i < n; i++) await group(g).getByRole('button', { name: 'Больше' }).click(); };
+const minus = async (g, n = 1) => { for (let i = 0; i < n; i++) await group(g).getByRole('button', { name: 'Меньше' }).click(); };
 const menu = () => btn('Открыть меню навигации').click();
 const closeDrawer = () => page.mouse.click(370, 600);
 const name = (i) => page.getByLabel(`Введите имя ${i}`);
