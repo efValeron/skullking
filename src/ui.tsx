@@ -8,7 +8,7 @@ const ICONS = { menu: Menu, back: ArrowLeft, close: X, drag: GripVertical, star:
 
 export const Icon = ({ name, size = 24 }: { name: keyof typeof ICONS; size?: number }) => {
   const Svg = ICONS[name];
-  return <Svg className="icon" size={size} strokeWidth={2.25} aria-hidden="true" />;
+  return <Svg className="icon" size={size} strokeWidth={2} aria-hidden="true" />;
 };
 
 /** Dealer mark next to a player's name. */
@@ -48,11 +48,11 @@ export function Stepper(props: { label: string; value: number; onChange: (v: num
   return (
     <div className="stepper" role="group" aria-label={label}>
       <button className="circle" aria-label={t.decrease} disabled={disabled} onClick={() => set(value - step)}>
-        <Icon name="minus" size={20} />
+        <Icon name="minus" size={18} />
       </button>
       <span className="stepper-value">{value}</span>
       <button className="circle" aria-label={t.increase} disabled={disabled} onClick={() => set(value + step)}>
-        <Icon name="plus" size={20} />
+        <Icon name="plus" size={18} />
       </button>
     </div>
   );

@@ -79,7 +79,6 @@ export function ScoresScreen(props: ScoresProps) {
           </Card>
         )}
 
-        <div className="scores-sheet">
         <table ref={tableRef} className={narrow ? 'scores narrow' : 'scores'}>
           <thead>
             <tr>
@@ -139,7 +138,6 @@ export function ScoresScreen(props: ScoresProps) {
             })}
           </tbody>
         </table>
-        </div>
 
         {props.mode === 'finish' &&
           (isGameFinished(game) ? (

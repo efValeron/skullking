@@ -1,19 +1,19 @@
 /* Hallmark · theme: Hum · genre: playful · shape: app screen · stamp in src/app.css
  * built: the project · redesign: restyle · v2.0.0 */
-/* Voice input block. No equivalent in the original: a flat cream button, wine while listening; the draft as pills. */
+/* Voice input block. No equivalent in the original: an outline button, wine while listening; the draft as tags. */
 .voice { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 12px; }
 /* Secondary look so it doesn't compete with the screen's main action; filled while listening. */
-.btn.btn-voice { gap: 8px; background: var(--color-card); color: var(--primary); box-shadow: inset 0 0 0 1px var(--color-edge); }
-.btn.btn-voice:not(:disabled):active { background: var(--color-paper-2); }
-.btn.btn-voice:disabled { color: var(--disabled-text); box-shadow: inset 0 0 0 1px var(--color-rule); cursor: not-allowed; }
-.btn.btn-voice.listening { background: var(--primary); color: var(--on-primary); box-shadow: none; }
+.btn.btn-voice { gap: 8px; background: transparent; color: var(--primary); border-color: var(--primary); }
+.btn.btn-voice:not(:disabled):active { background: var(--pressed); }
+.btn.btn-voice:disabled { color: var(--disabled-text); border-color: var(--color-edge); cursor: not-allowed; }
+.btn.btn-voice.listening { background: var(--primary); color: var(--on-primary); border-color: var(--color-ink-2); }
 .btn.btn-voice.listening:not(:disabled):active { background: var(--color-accent-deep); }
 .voice-interim { font-style: italic; color: var(--color-muted); text-align: center; }
 .voice-draft { width: 100%; display: flex; flex-direction: column; gap: 12px; }
 .voice-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.voice-chips li { padding: 4px 12px; border: 1px solid var(--color-rule); border-radius: var(--radius-pill); background: var(--grain), var(--color-card); }
+.voice-chips li { padding: 4px 12px; border: 1px solid var(--field); border-radius: var(--radius-input); }
 .voice-note { font-size: var(--text-sm); color: var(--color-muted); }
 .voice-actions { display: flex; justify-content: center; gap: 12px; }
-.voice-problem { padding: 8px 12px; border-radius: 12px; background: var(--error); color: var(--on-error); text-align: center; }
+.voice-problem { padding: 8px 12px; border-radius: var(--radius-input); background: var(--error); color: var(--on-error); text-align: center; }
 .name-field.voice-target { outline: 2px solid var(--now); outline-offset: 2px; }
 .btn.btn-voice:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }

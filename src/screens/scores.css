@@ -7,9 +7,9 @@
 
 /* Lines sit inside the cells: top line in the header, bottom line in every row, left line on player columns. */
 .scores { width: 100%; border-spacing: 0; table-layout: fixed; text-align: center; }
-.scores th, .scores td { height: 41px; padding: 0; border-bottom: 1px solid var(--line); font-weight: 600; }
+.scores th, .scores td { height: 41px; padding: 0; border-bottom: 1px solid var(--line); font-weight: 400; }
 .scores :is(th, td) + :is(th, td) { border-left: 1px solid var(--line); }
-.scores thead th { height: 37px; padding-bottom: 2px; border-top: 0; border-bottom: 1px solid var(--line); background: var(--color-paper-2); }
+.scores thead th { height: 37px; padding-bottom: 2px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .scores thead th { font-size: var(--text-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-inline: 2px; }
 .scores.narrow thead th { font-size: var(--text-xs); }
 .scores thead th:first-child { width: 50px; }
@@ -19,20 +19,17 @@
 .scores .sub { display: grid; grid-template-columns: 1fr 1fr 2fr; container-type: inline-size; margin-left: -1px; } /* split the whole column, line included */
 .scores .sub > span { padding: 0 0.35em; font-size: min(14px, 22.3cqw); height: min(27px, 43cqw); line-height: min(25px, 40cqw); }
 .scores .sub > span:not(:last-child) { border-right: 1px solid var(--line); }
-.scores .total { display: block; height: 30px; font: 700 var(--text-lg)/27px var(--font-display); font-variant-numeric: tabular-nums; border-top: 1px solid var(--line); background: var(--total-strip); }
+.scores .total { display: block; height: 30px; line-height: 27px; font-size: var(--text-md); font-variant-numeric: tabular-nums; border-top: 1px solid var(--line); background: var(--total-strip); }
 .scores .frac { width: fit-content; margin: 1px auto 0; padding: 0 1px; border-top: 1px solid var(--line); font-size: 11px; line-height: 16px; }
 
-/* Blue marks the live round on its number cell only; red marks a round that does not add up. */
-.scores tr.current > th { background: var(--now); color: var(--on-now); }
-.scores tr.invalid > th { background: var(--error); color: var(--on-error); }
-.scores tr.invalid > td { box-shadow: inset 0 2px var(--error), inset 0 -2px var(--error); } /* a red rule across the round, not a tint */
-.scores tr.current > td { background: color-mix(in oklab, var(--now) 14%, var(--color-card)); }
-.scores tr.invalid > td, .scores tr.invalid > td .total { background: color-mix(in oklab, var(--error) 30%, var(--color-paper)); }
-.scores tr > td.changed, .scores tr > td.changed .total { background: var(--changed); } /* beats the invalid-row tint */
+/* As the original: teal tints the whole live round, brick fills a round that does not add up, honey a changed cell. */
+.scores tr.current { background: color-mix(in oklab, var(--now) 33%, transparent); }
+.scores tr.invalid { background: var(--error); }
+.scores td.changed, .scores td.changed .total { background: var(--changed); }
 .scores tbody tr:last-child > * { border-bottom: 1px solid var(--line); }
 .scores td > button { display: block; width: 100%; padding: 0; border: 0; background: none; }
 .scores td > button:focus-visible { outline-offset: -2px; } /* keep the ring inside the cell */
-.scores-screen .error { padding: 4px 12px; border-radius: 12px; background: var(--error); color: var(--on-error); font-weight: 700; }
+.scores-screen .error { padding: 4px 12px; border-radius: var(--radius-input); background: var(--error); color: var(--on-error); }
 
 /* Cell sheet: everything centred, buttons full width. */
 .cell-sheet { display: flex; flex-direction: column; align-items: center; padding: 8px var(--pad) 16px; }
@@ -40,12 +37,6 @@
 .cell-sheet .checkbox { gap: 8px; height: 48px; margin: 4px 0 12px; padding-left: 8px; }
 .cell-sheet > h2 + div { margin-top: 16px; }
 .cell-sheet > div + div { margin-top: var(--space-xs); }
-.cell-sheet > div > div:first-child { margin-bottom: 1px; font-weight: 600; color: var(--color-muted); }
+.cell-sheet > div > div:first-child { margin-bottom: 1px; color: var(--color-muted); }
 .cell-sheet > .btn { margin-top: 40px; }
 .cell-sheet > .btn + .btn { margin-top: 4px; }
-
-/* The signature: the table on a cut sheet of card, torn along its foot, lit from the top left. */
-.scores-sheet { position: relative; isolation: isolate; padding-bottom: var(--space-xs); filter: var(--shadow-paper); }
-.scores-sheet::before, .scores-sheet::after { content: ""; position: absolute; z-index: -1; clip-path: var(--torn-bottom); }
-.scores-sheet::before { inset: 0 0 -2px; background: var(--color-fringe); }
-.scores-sheet::after { inset: 0; background: var(--grain), var(--fibre), var(--color-card); }
