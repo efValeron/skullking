@@ -315,7 +315,6 @@ function readEvent(t: string[], i: number, inBonus: boolean): { pts: number; len
   const subj = at(k);
   if (isFourteen(subj)) return black ? { pts: 20, len: k + 1 } : inBonus ? { pts: 10, len: 1 } : null;
   if (black && !/^пират/.test(subj)) return null;
-  if (/^(лут|альянс)/.test(subj)) return { pts: 20, len: 1 };
   const pirate = /^пират/.test(subj) || /^(корол|скалкинг|скулкинг)/.test(subj);
   const mermaid = /^русалк/.test(subj);
   if (!pirate && !mermaid) return null;
@@ -417,22 +416,31 @@ function parseResultsOne(text: string, idx: Index, ctx: { cards: number }): Pars
   const addBonus = (who: string, pts: number): void => {
     bonus.set(who, (bonus.get(who) ?? 0) + pts);
   };
+  // Лут и альянс: «альянс с Денисом» — пара, +20 обоим один раз; без партнёра +20 тому, кто сказал.
+  const allies: { who: string; partner: string | null }[] = [];
+  let ally: { who: string; partner: string | null } | null = null; // последнее упоминание у текущего игрока
+  let partner: string | null = null; // «с Денисом», сказанное до слова «альянс»
   let kraken: boolean | undefined;
   let cur: string | null = null;
   let inBonus = false; // после «бонус», «плюс» или события число кратное 10 — это бонус
   let fix = false;
+  const drop = (): void => {
+    cur = null;
+    ally = null;
+    partner = null;
+  };
   let i = 0;
   while (i < t.length) {
     const w = t[i] as string;
     if ((w === 'без' || w === 'нет') && /^кракен/.test(t[i + 1] ?? '')) {
       kraken = false;
-      cur = null;
+      drop();
       i += 2;
       continue;
     }
     if (/^кракен/.test(w)) {
       kraken = true;
-      cur = null;
+      drop();
       i++;
       continue;
     }
@@ -450,10 +458,14 @@ function parseResultsOne(text: string, idx: Index, ctx: { cards: number }): Pars
     if (names.length === 1) {
       // «альянс с Денисом»: партнёр, а не следующий игрок
       if (cur && (t[i - 1] === 'с' || t[i - 1] === 'со')) {
+        if (ally && !ally.partner) ally.partner = names[0] as string;
+        else partner = names[0] as string;
         i++;
         continue;
       }
       cur = names[0] as string;
+      ally = null;
+      partner = null;
       seen.add(cur);
       inBonus = false;
       fix = false;
@@ -461,6 +473,14 @@ function parseResultsOne(text: string, idx: Index, ctx: { cards: number }): Pars
       continue;
     }
     if (cur && (isBonusKeyword(w) || w === 'плюс')) {
+      inBonus = true;
+      i++;
+      continue;
+    }
+    if (cur && /^(лут|альянс)/.test(w)) {
+      ally = { who: cur, partner };
+      allies.push(ally);
+      partner = null;
       inBonus = true;
       i++;
       continue;
@@ -493,9 +513,24 @@ function parseResultsOne(text: string, idx: Index, ctx: { cards: number }): Pars
       }
     }
     unknown.push(w);
-    cur = null;
+    drop();
     inBonus = false;
     i++;
+  }
+  const paired = new Set<string>();
+  const inPair = new Set<string>();
+  for (const a of allies) {
+    if (!a.partner || a.partner === a.who) continue;
+    const key = [a.who, a.partner].sort().join('|');
+    if (!paired.has(key)) {
+      paired.add(key);
+      addBonus(a.who, 20);
+      addBonus(a.partner, 20);
+    }
+    inPair.add(a.who).add(a.partner);
+  }
+  for (const a of allies) {
+    if ((!a.partner || a.partner === a.who) && !inPair.has(a.who)) addBonus(a.who, 20); // «лут лут» = +40
   }
   // Один «кракен» среди непонятных слов — болтовня («кракен выйдет, зуб даю»), а не итог.
   if (!tricks.size && !bonus.size && (kraken === undefined || unknown.length)) return nothing(text, unknown);
@@ -513,8 +548,8 @@ function parseResultsOne(text: string, idx: Index, ctx: { cards: number }): Pars
  * «Кракен, Аня два, Дима один», «Оля бонус сорок», «Валера два, бонусы пират пирата плюс двадцать».
  * Бонусы: 14-я карта +10 (в бонусной части), чёрная 14-я +20, пират побил русалку +20,
  * чёрный пират побил пирата +30 (×число пиратов), русалка побила чёрного пирата +40, лут или альянс +20,
- * число кратное 10 после «бонус», «плюс» или события. «Альянс с Денисом» даёт +20 только тому, кто говорит:
- * засчитывать ли альянс, решают игроки сами.
+ * число кратное 10 после «бонус», «плюс» или события. «Альянс с Денисом» даёт +20 обоим (пара считается
+ * один раз, сколько её ни называй). Засчитывать ли альянс по ставкам, решают игроки сами.
  */
 export function parseResults(alts: string[], players: PlayerInput[], ctx: { cards: number }): Parsed<ResultsDraft> {
   const idx = buildIndex(toPlayers(players));
