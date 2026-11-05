@@ -17,7 +17,7 @@
 .screen.players-edit { padding-top: 16px; }
 .player-row { position: relative; display: flex; align-items: center; }
 /* 8px between fields and before «+» (the original had the fields touching). */
-.player-row + .player-row, .player-row + .add-bar { margin-top: 8px; }
+.player-row + .player-row, .player-list + .add-bar { margin-top: 8px; }
 .name-field { flex: 1; min-width: 0; height: 56px; padding: 0 12px; border: 1px solid var(--field); border-radius: 4px; background: none; font-size: 16px; letter-spacing: 0.5px; caret-color: var(--primary); }
 .name-field::placeholder { color: var(--placeholder); opacity: 1; }
 /* Focus = 2px primary edge drawn by the outline over the border (inputs always show it). */
@@ -77,6 +77,12 @@
 
 /* Dealer: pick on the players screen, mark next to the name on bids and round. Not in the original. */
 .dealer-hint { margin: -4px 0 8px; color: var(--placeholder); }
-.circle.dealer-pick:not(.on), .circle.quiet { background: transparent; color: var(--field); border-color: var(--field); }
-.circle.quiet:disabled { background: var(--disabled-bg); color: var(--disabled-text); border-color: var(--disabled-text); cursor: not-allowed; }
+.circle.dealer-pick:not(.on) { background: transparent; color: var(--field); border-color: var(--field); }
 .dealer-mark { display: inline-flex; vertical-align: -3px; margin-left: 8px; color: var(--primary); }
+
+/* Drag to reorder (edit players): handle on the left, the lifted row casts a shadow, neighbours glide (dnd-kit). */
+.drag-handle { display: flex; align-items: center; justify-content: center; flex: none; width: 32px; height: 56px; margin-right: 4px; padding: 0; border: 0; border-radius: 4px; background: none; color: var(--field); cursor: grab; touch-action: none; }
+.player-row.dragging { z-index: 3; }
+.player-row.dragging .drag-handle { cursor: grabbing; }
+.player-row.dragging .name-field { background: var(--paper); box-shadow: var(--hint-shadow); }
+@media (prefers-reduced-motion: reduce) { .player-row { transition: none !important; } }

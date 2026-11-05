@@ -1,4 +1,8 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
+import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { dealerAfterRemove, namesValid, suggestNames } from '../game/model';
 import { t } from '../i18n';
 import { AppBar, Button, Checkbox, Icon } from '../ui';
@@ -23,7 +27,25 @@ export interface PlayersProps {
 }
 
 const setAt = <T,>(arr: T[], i: number, v: T): T[] => arr.map((x, j) => (j === i ? v : x));
-const swap = <T,>(arr: T[], i: number, j: number): T[] => arr.map((x, k) => (k === i ? arr[j]! : k === j ? arr[i]! : x));
+
+/** A player row; in edit mode it is dragged by its handle (the name field stays a normal input). */
+function Row({ id, sortable, label, children }: { id: string; sortable: boolean; label: string; children: ReactNode }) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    disabled: !sortable,
+    transition: { duration: 200, easing: 'cubic-bezier(0.2, 0, 0, 1)' },
+  });
+  return (
+    <div ref={setNodeRef} className={isDragging ? 'player-row dragging' : 'player-row'} style={{ transform: CSS.Translate.toString(transform), transition }}>
+      {sortable && (
+        <button ref={setActivatorNodeRef} className="drag-handle" {...attributes} {...listeners} aria-label={label}>
+          <Icon name="drag" />
+        </button>
+      )}
+      {children}
+    </div>
+  );
+}
 
 export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame, dealer: initialDealer = 0, history, onBack, onSubmit }: PlayersProps) {
   const edit = mode === 'edit';
@@ -31,10 +53,19 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
   const [inGame, setInGame] = useState(() => initialNames.map((_, i) => initialInGame?.[i] ?? true));
   /** Edit: order[i] = original index of the player now in row i. */
   const [order, setOrder] = useState(() => initialNames.map((_, i) => i));
-  const move = (i: number, j: number) => {
-    setNames(swap(names, i, j));
-    setInGame(swap(inGame, i, j));
-    setOrder(swap(order, i, j));
+  // Drag to reorder (edit): row ids are the players' original indexes, so rows keep their identity while moving.
+  const ids = names.map((_, i) => String(edit ? order[i] : i));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    const from = ids.indexOf(String(active.id));
+    const to = ids.indexOf(String(over.id));
+    setNames(arrayMove(names, from, to));
+    setInGame(arrayMove(inGame, from, to));
+    setOrder(arrayMove(order, from, to));
   };
   const [dealer, setDealer] = useState(initialDealer);
   /** Row whose autocomplete list is open. */
@@ -62,10 +93,13 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
       <main className={edit ? 'screen players-edit' : 'screen'}>
         <h2 className="section-title">{t.players}</h2>
         {!edit && <p className="dealer-hint">{t.dealerHint}</p>}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis, restrictToParentElement]} onDragEnd={onDragEnd}>
+          <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+            <div className="player-list">
         {names.map((name, i) => {
           const hints = open === i ? suggestNames(history, name) : [];
           return (
-            <div className="player-row" key={i}>
+            <Row key={ids[i]} id={ids[i]!} sortable={edit} label={`${t.drag}: ${i + 1}`}>
               <input
                 className={speech.listening && i === target ? 'name-field voice-target' : 'name-field'}
                 value={name}
@@ -80,15 +114,7 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
                 onBlur={() => setOpen(null)}
               />
               {edit ? (
-                <>
-                  <button className="circle circle-sm quiet" aria-label={`${t.moveUp}: ${i + 1}`} disabled={i === 0} onClick={() => move(i, i - 1)}>
-                    <Icon name="up" size={20} />
-                  </button>
-                  <button className="circle circle-sm quiet" aria-label={`${t.moveDown}: ${i + 1}`} disabled={i === names.length - 1} onClick={() => move(i, i + 1)}>
-                    <Icon name="down" size={20} />
-                  </button>
-                  <Checkbox hideLabel label={`${t.inGame}: ${i + 1}`} checked={inGame[i] ?? true} onChange={(v) => setInGame(setAt(inGame, i, v))} />
-                </>
+                <Checkbox hideLabel label={`${t.inGame}: ${i + 1}`} checked={inGame[i] ?? true} onChange={(v) => setInGame(setAt(inGame, i, v))} />
               ) : (
                 <>
                   <button
@@ -129,9 +155,12 @@ export function PlayersScreen({ mode, names: initialNames, inGame: initialInGame
                   ))}
                 </ul>
               )}
-            </div>
+            </Row>
           );
         })}
+            </div>
+          </SortableContext>
+        </DndContext>
         <button className="btn add-bar" aria-label={t.add} disabled={edit} onClick={() => setNames([...names, ''])}>
           +
         </button>

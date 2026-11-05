@@ -20,6 +20,16 @@ const plus = async (g, n = 1) => { for (let i = 0; i < n; i++) await group(g).ge
 const minus = async (g, n = 1) => { for (let i = 0; i < n; i++) await group(g).getByRole('button', { name: '-' }).click(); };
 const menu = () => btn('Открыть меню навигации').click();
 const dealer = () => page.locator('.player-name:has(.dealer-mark):visible').innerText();
+/** Drag a player row by its handle onto another row (edit players). */
+async function drag(from, to) {
+  const a = await btn(`Перетащить: ${from}`).boundingBox();
+  const b = await btn(`Перетащить: ${to}`).boundingBox();
+  await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(a.x + a.width / 2, b.y + b.height / 2, { steps: 15 });
+  await page.mouse.up();
+  await page.waitForTimeout(300); // drop animation
+}
 const totals = (round) => page.locator(`td[data-round="${round}"] .total`).allInnerTexts();
 async function expectTotals(round, want) {
   assert.deepEqual((await totals(round)).map(Number), want, `totals of round ${round}`);
@@ -171,7 +181,7 @@ console.log('ok  Back on root screen stays');
 // Reorder in «Редактировать игроков»: Дима moves up; Аня still deals now, next round goes to her new neighbour Оля
 await menu();
 await btn('Редактировать игроков').click();
-await btn('Выше: 2').click();
+await drag(2, 1); // Дима's handle onto Аня's row
 await btn('Сохранить').click();
 assert.equal(await page.locator('.player-name:visible').first().innerText(), 'Дима', 'new order on bids');
 assert.equal(await dealer(), 'Аня', 'current dealer stays after reorder');
