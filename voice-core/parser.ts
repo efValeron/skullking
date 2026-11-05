@@ -147,13 +147,19 @@ function declined(base: string): string[] {
 
 interface Index {
   forms: Map<string, Set<string>>;
+  /** Имена, которые носят два игрока (два «Женя»): голосом не различить. */
+  twins: Set<string>;
 }
 
 const toPlayers = (ps: PlayerInput[]): Player[] => ps.map((p) => (typeof p === 'string' ? { name: p } : p));
 
 function buildIndex(players: Player[]): Index {
   const forms = new Map<string, Set<string>>();
+  const seen = new Set<string>();
+  const twins = new Set<string>();
   for (const p of players) {
+    if (seen.has(p.name)) twins.add(p.name);
+    seen.add(p.name);
     for (const base of [p.name, ...(p.aliases ?? [])]) {
       for (const f of declined(base)) {
         let owners = forms.get(f);
@@ -165,7 +171,7 @@ function buildIndex(players: Player[]): Index {
       }
     }
   }
-  return { forms };
+  return { forms, twins };
 }
 
 /** Расстояние Левенштейна не больше 1. */
@@ -194,16 +200,15 @@ function within1(a: string, b: string): boolean {
   return edits + (la - i) + (lb - j) <= 1;
 }
 
-/** Каноничные имена игроков, подходящие под слово. Нечётко только для слов от 5 букв. */
+/**
+ * Игроки, которых называет слово: точное имя или его падежная форма, без нечёткого совпадения
+ * («Валерон» и «Валера» — разные игроки). Точное имя важнее чужой падежной формы («Яна» при Ян и Яна).
+ * Имя двух игроков возвращается дважды: для разбора это «непонятно, кто».
+ */
 function matchName(w: string, idx: Index): string[] {
-  const hit = idx.forms.get(w);
-  if (hit) return [...hit];
-  if (w.length < 5) return [];
-  const out = new Set<string>();
-  for (const [form, owners] of idx.forms) {
-    if (form.length >= 5 && within1(w, form)) owners.forEach((o) => out.add(o));
-  }
-  return [...out];
+  const owners = [...(idx.forms.get(w) ?? [])];
+  const exact = owners.filter((o) => norm(o) === w);
+  return (exact.length ? exact : owners).flatMap((n) => (idx.twins.has(n) ? [n, n] : [n]));
 }
 
 // ---------- общие помощники ----------
@@ -250,7 +255,6 @@ export function parseName(
 ): Parsed<NameDraft> {
   const maxWords = opts.maxWords ?? 1;
   const P = toPlayers(players);
-  const idx = buildIndex(P);
   return best<NameDraft>(alts, (text) => {
     const t = tok(text);
     if (!t.length) return fail('empty', text);
@@ -266,7 +270,8 @@ export function parseName(
     }
     const name = raw.map(cap).join(' ');
     const me = norm(name);
-    if (P.some((p) => norm(p.name) === me) || (t.length === 1 && matchName(t[0] as string, idx).length)) {
+    // Дубль — только то же имя: «Валерон» при «Валера», «Яна» при «Ян» — другие игроки.
+    if (P.some((p) => norm(p.name) === me)) {
       return fail('duplicate', text, name);
     }
     const warnings: string[] = [];

@@ -63,6 +63,15 @@ describe('bids by voice', () => {
     const a = applyBids(names, r)(['Аня два, Дима один'], [0, 0, 3]);
     expect(a.ok && [a.state, a.marks]).toEqual([[2, 1, 3], ['bid:0', 'bid:1']]);
   });
+  it('similar names are separate players; one name for two players is not guessed', () => {
+    const g = createGame(['Валера', 'Валерон', 'Женя', 'Жека', 'Женя'], { totalRounds: 10, startRound: 3, maxCards: null });
+    const apply = applyBids(g.playerNames, lastRound(g));
+    const a = apply(['Валерону два Валера один Жека три'], [0, 0, 0, 0, 0]);
+    expect(a.ok && a.state).toEqual([1, 2, 0, 3, 0]);
+    expect(apply(['Валерн два'], [0, 0, 0, 0, 0]).ok).toBe(false); // no guessing a near name
+    const f = apply(['Женя два'], [0, 0, 0, 0, 0]);
+    expect(!f.ok && failText(f)).toBe('Не понял: «Женя два» — «женя» зовут двоих, дай им разные имена');
+  });
   it('away players are not in the grammar', () => {
     const away = round(3, (x) => ({ ...x, players: x.players.map((p, i) => (i === 2 ? { ...p, away: true } : p)) }));
     expect(applyBids(names, away)(['Оля два'], [0, 0, 0]).ok).toBe(false);

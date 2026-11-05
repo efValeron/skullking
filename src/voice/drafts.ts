@@ -96,7 +96,9 @@ const REASON: Record<Fail['reason'], string> = {
   bad_name: 'не похоже на имя',
 };
 export const failText = (f: Fail): string =>
-  `Не понял${f.heard ? `: «${f.heard}»` : ''} — ${REASON[f.reason]}${f.detail ? ` (${f.detail})` : ''}`;
+  f.reason === 'ambiguous_name'
+    ? `Не понял${f.heard ? `: «${f.heard}»` : ''} — «${f.detail}» зовут двоих, дай им разные имена`
+    : `Не понял${f.heard ? `: «${f.heard}»` : ''} — ${REASON[f.reason]}${f.detail ? ` (${f.detail})` : ''}`;
 
 export const ENGINE_ERROR: Record<string, string> = {
   'not-allowed': 'Нет доступа к микрофону',

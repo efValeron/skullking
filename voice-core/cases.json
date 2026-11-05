@@ -108,7 +108,10 @@
     { "say": ["Кракен"], "players": [], "expect": { "ok": false, "reason": "bad_name" } },
     { "say": ["раз два три четыре"], "players": [], "opts": { "maxWords": 2 }, "expect": { "ok": false, "reason": "bad_name" } },
     { "say": ["Дима"], "players": ["Дима"], "expect": { "ok": false, "reason": "duplicate" } },
-    { "say": ["Диму"], "players": ["Дима"], "expect": { "ok": false, "reason": "duplicate" } },
+    { "say": ["дима"], "players": ["Дима"], "expect": { "ok": false, "reason": "duplicate" } },
+    { "say": ["Валерон"], "players": ["Валера"], "expect": { "ok": true, "name": "Валерон" } },
+    { "say": ["Жека"], "players": ["Женя"], "expect": { "ok": true, "name": "Жека" } },
+    { "say": ["Яна"], "players": ["Ян"], "expect": { "ok": true, "name": "Яна" } },
     { "say": [""], "players": [], "expect": { "ok": false, "reason": "empty" } }
   ]
 }
