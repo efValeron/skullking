@@ -159,6 +159,18 @@ assert.equal(await page.getByText('Игра завершена').count(), 1);
 assert.equal(await btn('Результаты').count(), 1);
 console.log('ok  saved game listed after reload');
 
+// Delete from the list: «Нет» keeps it, «Да» removes it for good
+await btn('Удалить игру').click();
+await btn('Нет').click();
+assert.equal(await btn('Результаты').count(), 1, 'kept after «Нет»');
+await btn('Удалить игру').click();
+assert.equal(await page.getByText('Аня, Дима, Оля. Вернуть её будет нельзя.', { exact: false }).count(), 1, 'dialog names the game');
+await btn('Да').click();
+await page.reload();
+assert.equal(await btn('Результаты').count(), 0, 'gone after «Да» and reload');
+assert.equal(await page.getByText('Предыдущие игры').count(), 0, 'empty list hides the heading');
+console.log('ok  delete game from the list');
+
 // ---------- Part 2: 7 players, deck limit, start round, modals, Back, Continue ----------
 await page.evaluate(() => localStorage.clear());
 await page.reload();

@@ -1,10 +1,10 @@
 // Shared building blocks; styles in app.css.
 import type { ReactNode } from 'react';
-import { ArrowLeft, Check, GripVertical, Menu, Mic, Minus, PlayingCardsFan, Plus, Star, X, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, Check, GripVertical, Menu, Mic, Minus, PlayingCardsFan, Plus, Star, Trash2, X, type LucideIcon } from 'lucide-react';
 import { t } from './i18n';
 
 // One icon set (Lucide, ISC): rounded strokes that match the rounded type and card stock.
-const ICONS = { menu: Menu, back: ArrowLeft, close: X, drag: GripVertical, star: Star, check: Check, cards: PlayingCardsFan, minus: Minus, plus: Plus, mic: Mic } satisfies Record<string, LucideIcon>;
+const ICONS = { menu: Menu, back: ArrowLeft, close: X, drag: GripVertical, star: Star, check: Check, cards: PlayingCardsFan, minus: Minus, plus: Plus, mic: Mic, trash: Trash2 } satisfies Record<string, LucideIcon>;
 
 export const Icon = ({ name, size = 24 }: { name: keyof typeof ICONS; size?: number }) => {
   const Svg = ICONS[name];

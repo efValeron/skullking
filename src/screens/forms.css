@@ -12,6 +12,7 @@
 .game-date { line-height: 21px; }
 .game-names { line-height: 20.5px; }
 .game > .btn { width: 130px; flex: none; }
+.game > .game-delete { flex: none; margin-left: 8px; } /* not in the original */
 .game + .btn { margin-top: 20px; }
 
 /* Players */
@@ -77,8 +78,8 @@
 .bonus-pts { letter-spacing: 0.1px; }
 
 /* Dealer: pick on the players screen, mark next to the name on bids and round. Not in the original. */
-.circle.dealer-pick:not(.on) { background: transparent; color: var(--color-muted); border-color: var(--field); }
-.circle.dealer-pick:not(.on):active { background: var(--pressed); }
+.circle.dealer-pick:not(.on), .circle.game-delete { background: transparent; color: var(--color-muted); border-color: var(--field); }
+.circle.dealer-pick:not(.on):active, .circle.game-delete:active { background: var(--pressed); }
 .dealer-mark { display: inline-flex; vertical-align: -3px; margin-left: 8px; color: var(--primary); }
 
 /* Drag to reorder (edit players): handle on the left, the lifted card casts its shadow, neighbours glide (dnd-kit). */

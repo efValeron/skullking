@@ -107,6 +107,10 @@ export function App() {
               setCur(i);
               push({ to: 'scores', mode: 'results' });
             }}
+            onDelete={(i) => {
+              setCur(null); // indices shift; the start screen sets cur again on the next tap
+              setGames((gs) => gs.filter((_, j) => j !== i));
+            }}
           />
         );
       case 'players':
