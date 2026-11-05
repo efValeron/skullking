@@ -3,10 +3,10 @@
 /* Voice input block. No equivalent in the original: a cream card-stock button, inked while listening; the draft as pills. */
 .voice { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 12px; }
 /* Secondary look so it doesn't compete with the screen's main action; filled while listening. */
-.btn.btn-voice { gap: 8px; background: var(--grain), var(--fibre), var(--color-card); color: var(--text); box-shadow: inset 0 0 0 1px var(--color-rule), 0 var(--edge) 0 0 var(--color-edge); transition-timing-function: var(--ease-snap); }
+.btn.btn-voice { gap: 8px; background: var(--grain), var(--fibre), var(--color-card); color: var(--primary); box-shadow: inset 0 0 0 1px var(--color-rule), 0 var(--edge) 0 0 var(--color-edge); transition-timing-function: var(--ease-snap); }
 .btn.btn-voice:not(:disabled):active { --edge: 1px; }
 .btn.btn-voice:disabled { border-color: var(--disabled-text); color: var(--disabled-text); cursor: not-allowed; }
-.btn.btn-voice.listening { background: var(--grain), var(--now); color: var(--on-now); box-shadow: 0 var(--edge) 0 0 var(--color-ink-2); }
+.btn.btn-voice.listening { background: var(--grain), var(--primary); color: var(--on-primary); box-shadow: 0 var(--edge) 0 0 var(--color-accent-deep); }
 .voice-interim { font-style: italic; color: var(--color-muted); text-align: center; }
 .voice-draft { width: 100%; display: flex; flex-direction: column; gap: 12px; }
 .voice-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0; padding: 0; list-style: none; }

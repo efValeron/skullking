@@ -26,7 +26,7 @@
 .scores tr.current > th { background: var(--now); color: var(--on-now); }
 .scores tr.invalid > th { background: var(--error); color: var(--on-error); }
 .scores tr.invalid > td { box-shadow: inset 0 2px var(--error), inset 0 -2px var(--error); } /* a red rule across the round, not a tint */
-.scores tr.current > td { background: color-mix(in oklab, var(--now) 6%, var(--color-card)); }
+.scores tr.current > td { background: color-mix(in oklab, var(--now) 14%, var(--color-card)); }
 .scores tr.invalid > td, .scores tr.invalid > td .total { background: color-mix(in oklab, var(--error) 30%, var(--color-paper)); }
 .scores tr > td.changed, .scores tr > td.changed .total { background: var(--changed); } /* beats the invalid-row tint */
 .scores tbody tr:last-child > * { border-bottom: 1px solid var(--line); }
